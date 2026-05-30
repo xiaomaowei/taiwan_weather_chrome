@@ -654,10 +654,6 @@ body {
   gap: 1px;
 }
 
-.forecast-pop::before {
-  content: '💧';
-  font-size: 8px;
-}
 
 /* Demo Banner styling */
 .demo-banner {
