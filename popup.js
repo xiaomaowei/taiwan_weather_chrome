@@ -294,26 +294,49 @@ function getElVal(elementValue, ...keyNames) {
 }
 
 function parseCWAWeatherData(data, townshipName) {
-  const records    = data.records;
-  const locsArray  = records.Locations || records.locations;
-  if (!locsArray?.length) throw new Error("API 回傳的 Locations 資料為空。");
+  const records = data?.records;
+  if (!records) throw new Error("氣象署 API 回傳格式錯誤：找不到 records 欄位。");
 
-  const locationList = locsArray[0].Location || locsArray[0].location;
-  if (!locationList?.length) throw new Error("找不到任何鄉鎮資料。");
+  const locsArray = records.Locations || records.locations;
+  if (!locsArray || !Array.isArray(locsArray) || locsArray.length === 0) {
+    throw new Error("氣象署 API 回傳格式錯誤：Locations 欄位為空或非陣列。");
+  }
+
+  const firstLoc = locsArray[0];
+  if (!firstLoc) {
+    throw new Error("氣象署 API 回傳格式錯誤：Locations[0] 為空。");
+  }
+
+  const locationList = firstLoc.Location || firstLoc.location;
+  if (!locationList || !Array.isArray(locationList) || locationList.length === 0) {
+    throw new Error("氣象署 API 回傳格式錯誤：找不到任何鄉鎮資料。");
+  }
 
   const townData = locationList.find(loc =>
-    (loc.LocationName || loc.locationName) === townshipName
+    (loc?.LocationName || loc?.locationName) === townshipName
   );
-  if (!townData) throw new Error(`在 API 回傳中找不到「${townshipName}」的資料。`);
+  if (!townData) {
+    throw new Error(`在 API 回傳中找不到「${townshipName}」的資料。`);
+  }
 
   const elements = townData.WeatherElement || townData.weatherElement;
+  if (!elements || !Array.isArray(elements)) {
+    throw new Error(`在「${townshipName}」的天氣資料中找不到 WeatherElement 欄位。`);
+  }
+
   const elMap = {};
-  elements.forEach(el => { elMap[el.ElementName || el.elementName] = el; });
+  elements.forEach(el => {
+    if (el) {
+      const name = el.ElementName || el.elementName;
+      if (name) elMap[name] = el;
+    }
+  });
 
   const getTimes = el => el ? (el.Time || el.time || []) : [];
   const getTV    = (ts, ...keys) => {
     if (!ts) return null;
-    return getElVal(ts.ElementValue || ts.elementValue, ...keys);
+    const ev = ts.ElementValue || ts.elementValue;
+    return getElVal(ev, ...keys);
   };
 
   const wxTimes    = getTimes(elMap["天氣現象"]);
@@ -327,7 +350,9 @@ function parseCWAWeatherData(data, townshipName) {
   const windTimes  = getTimes(elMap["風速"]);
   const windDTimes = getTimes(elMap["風向"]);
 
-  if (!wxTimes.length || !tempTimes.length) throw new Error("API 回傳的時間序列資料為空。");
+  if (!wxTimes.length || !tempTimes.length) {
+    throw new Error("氣象署 API 回傳的時間序列資料（天氣現象或平均溫度）為空。");
+  }
 
   const current = {
     temp:          getTV(tempTimes[0],  "Temperature",             "value") || "--",
@@ -343,6 +368,7 @@ function parseCWAWeatherData(data, townshipName) {
   const daysOfWeek = ["週日","週一","週二","週三","週四","週五","週六"];
 
   wxTimes.forEach((t, idx) => {
+    if (!t) return;
     const startStr = t.StartTime || t.startTime || "";
     const dateKey  = startStr.includes("T") ? startStr.split("T")[0] : startStr.split(" ")[0];
     if (!dateKey) return;

@@ -84,15 +84,35 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   if (json.success !== "true" || !json.records) throw new Error("API returned failure");
 
   const locsArray = json.records.Locations || json.records.locations;
-  const locationList = locsArray[0].Location || locsArray[0].location;
+  if (!locsArray || !Array.isArray(locsArray) || locsArray.length === 0) {
+    throw new Error("Locations field is empty or invalid in CWA response");
+  }
+
+  const firstLoc = locsArray[0];
+  if (!firstLoc) throw new Error("Locations[0] is empty");
+
+  const locationList = firstLoc.Location || firstLoc.location;
+  if (!locationList || !Array.isArray(locationList) || locationList.length === 0) {
+    throw new Error("Location list is empty in CWA response");
+  }
+
   const townData = locationList.find(loc =>
-    (loc.LocationName || loc.locationName) === township
+    (loc?.LocationName || loc?.locationName) === township
   );
-  if (!townData) throw new Error(`Township not found: ${township}`);
+  if (!townData) throw new Error(`Township not found in CWA response: ${township}`);
 
   const elements = townData.WeatherElement || townData.weatherElement;
+  if (!elements || !Array.isArray(elements)) {
+    throw new Error("WeatherElement list is missing or invalid in CWA response");
+  }
+
   const elMap = {};
-  elements.forEach(el => { elMap[el.ElementName || el.elementName] = el; });
+  elements.forEach(el => {
+    if (el) {
+      const name = el.ElementName || el.elementName;
+      if (name) elMap[name] = el;
+    }
+  });
 
   const getTimes = el => el ? (el.Time || el.time || []) : [];
   const getVal = (timeSlot, ...keys) => {
