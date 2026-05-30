@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "可愛手繪台灣天氣",
+  "version": "2.0.0",
+  "description": "顯示台灣各鄉鎮當前天氣、溫度、體感溫度、相對濕度、降雨量（降雨機率），以及一週天氣預報。可愛手繪風格主題。",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://*.cwa.gov.tw/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
