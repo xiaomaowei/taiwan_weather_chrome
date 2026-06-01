@@ -116,4 +116,4 @@ taiwan_weather_chrome/
 如果您在使用中遇到任何問題，或者有任何功能建議（例如想要更多可愛的天氣插圖、更多數據項目等），歡迎在 GitHub 提交 [Issue](https://github.com/xiaomaowei/taiwan_weather_chrome/issues) 或 Pull Request！
 
 * **作者**：[xiaomaowei](https://github.com/xiaomaowei)
-* **授權**：MIT License
+* **授權**：GNU GPL v3
