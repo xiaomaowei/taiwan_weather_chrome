@@ -157,7 +157,7 @@ async function fetchAndCacheWeather(county, township, apiKey) {
     const isDay = hourPart >= 6 && hourPart < 18;
 
     if (!forecastMap[dateKey]) {
-      forecastMap[dateKey] = { date: dateKey, dayName, minT: 999, maxT: -999, maxPop: 0, dayWx: "", nightWx: "", wx: "" };
+      forecastMap[dateKey] = { date: dateKey, dayName, minT: 999, maxT: -999, maxPop: null, dayWx: "", nightWx: "", wx: "" };
     }
     const wxVal = getVal(t, "Weather") || "";
     if (isDay) forecastMap[dateKey].dayWx = wxVal; else forecastMap[dateKey].nightWx = wxVal;
@@ -166,8 +166,15 @@ async function fetchAndCacheWeather(county, township, apiKey) {
     if (!isNaN(maxTVal) && maxTVal > forecastMap[dateKey].maxT) forecastMap[dateKey].maxT = maxTVal;
     const minTVal = parseInt(getVal(minTTimes[idx], "MinTemperature") || "NaN");
     if (!isNaN(minTVal) && minTVal < forecastMap[dateKey].minT) forecastMap[dateKey].minT = minTVal;
-    const popVal  = parseInt(getVal(popTimes[idx],  "ProbabilityOfPrecipitation") || "NaN");
-    if (!isNaN(popVal)  && popVal  > forecastMap[dateKey].maxPop)  forecastMap[dateKey].maxPop  = popVal;
+    
+    if (popTimes && popTimes[idx]) {
+      const popVal  = parseInt(getVal(popTimes[idx],  "ProbabilityOfPrecipitation") || "NaN");
+      if (!isNaN(popVal)) {
+        if (forecastMap[dateKey].maxPop === null || popVal > forecastMap[dateKey].maxPop) {
+          forecastMap[dateKey].maxPop = popVal;
+        }
+      }
+    }
   });
 
   const forecast = Object.values(forecastMap)

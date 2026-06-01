@@ -42,7 +42,9 @@ const errorRetryBtn      = document.getElementById("error-retry-btn");
 const errorMessageEl     = document.getElementById("error-message");
 
 const locationDisplay    = document.getElementById("location-display");
+const cacheAgeContainer  = document.getElementById("cache-age-container");
 const cacheAgeBadge      = document.getElementById("cache-age-badge");
+const refreshBtn         = document.getElementById("refresh-btn");
 
 const currentTempEl      = document.getElementById("current-temp");
 const currentWxEl        = document.getElementById("current-wx");
@@ -378,7 +380,7 @@ function parseCWAWeatherData(data, townshipName) {
     const isDay    = hourPart >= 6 && hourPart < 18;
 
     if (!forecastMap[dateKey]) {
-      forecastMap[dateKey] = { date:dateKey, dayName, minT:999, maxT:-999, maxPop:0, dayWx:"", nightWx:"", wx:"" };
+      forecastMap[dateKey] = { date:dateKey, dayName, minT:999, maxT:-999, maxPop:null, dayWx:"", nightWx:"", wx:"" };
     }
     const wxVal = getTV(t, "Weather", "value") || "";
     if (isDay) forecastMap[dateKey].dayWx = wxVal; else forecastMap[dateKey].nightWx = wxVal;
@@ -387,8 +389,15 @@ function parseCWAWeatherData(data, townshipName) {
     if (!isNaN(maxTVal) && maxTVal > forecastMap[dateKey].maxT) forecastMap[dateKey].maxT = maxTVal;
     const minTVal = parseInt(getTV(minTTimes[idx], "MinTemperature", "value") || "NaN");
     if (!isNaN(minTVal) && minTVal < forecastMap[dateKey].minT) forecastMap[dateKey].minT = minTVal;
-    const popVal  = parseInt(getTV(popTimes[idx],  "ProbabilityOfPrecipitation", "value") || "NaN");
-    if (!isNaN(popVal) && popVal > forecastMap[dateKey].maxPop) forecastMap[dateKey].maxPop = popVal;
+    
+    if (popTimes && popTimes[idx]) {
+      const popVal  = parseInt(getTV(popTimes[idx],  "ProbabilityOfPrecipitation", "value") || "NaN");
+      if (!isNaN(popVal)) {
+        if (forecastMap[dateKey].maxPop === null || popVal > forecastMap[dateKey].maxPop) {
+          forecastMap[dateKey].maxPop = popVal;
+        }
+      }
+    }
     const tempVal = parseInt(getTV(tempTimes[idx], "Temperature", "value") || "NaN");
     if (!isNaN(tempVal)) {
       if (forecastMap[dateKey].maxT === -999) forecastMap[dateKey].maxT = tempVal;
@@ -439,11 +448,11 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   windScaleEl.textContent    = current.windScale !== "--" ? `${current.windScale} 級` : "--";
   windDirEl.textContent      = current.windDirection || "--";
 
-  if (fromCache && cacheAge) {
+  if (cacheAge) {
     cacheAgeBadge.textContent = cacheAge;
-    cacheAgeBadge.classList.remove("hidden");
+    cacheAgeContainer.classList.remove("hidden");
   } else {
-    cacheAgeBadge.classList.add("hidden");
+    cacheAgeContainer.classList.add("hidden");
   }
 
   // 7-column forecast grid
@@ -451,13 +460,15 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   forecast.forEach((day, idx) => {
     const col = document.createElement("div");
     col.className = "forecast-col" + (idx === 0 ? " today" : "");
-    const rainProb = day.rainProb !== undefined ? day.rainProb : (day.maxPop || 0);
+    const hasPop = day.rainProb !== undefined ? true : (day.maxPop !== null && day.maxPop !== undefined);
+    const popVal = day.rainProb !== undefined ? day.rainProb : day.maxPop;
+    const rainProbStr = hasPop ? `💧${popVal}%` : `💧--`;
     col.innerHTML = `
       <span class="forecast-day-label">${day.displayName}</span>
       <span class="forecast-col-icon">${getSVGIconHtml(day.wx)}</span>
       <span class="forecast-temp-max">${day.maxT}°</span>
       <span class="forecast-temp-min">${day.minT}°</span>
-      <span class="forecast-pop">💧${rainProb}%</span>
+      <span class="forecast-pop">${rainProbStr}</span>
     `;
     forecastListEl.appendChild(col);
   });
@@ -596,7 +607,7 @@ function performSearch(query) {
 }
 
 // ── Fetch Weather (cache-first) ───────────────────────────────────────────────
-async function fetchWeather() {
+async function fetchWeather(force = false) {
   if (savedLocations.length === 0) { showError("請先新增一個收藏位置。"); return; }
 
   const loc = savedLocations[activeLocationIdx];
@@ -609,7 +620,7 @@ async function fetchWeather() {
   if (currentSettings.demoMode) {
     demoModeBanner.classList.remove("hidden");
     setTimeout(() => {
-      try { renderWeather(getMockWeatherData(loc.county, loc.township), false); }
+      try { renderWeather(getMockWeatherData(loc.county, loc.township), false, "剛剛更新"); }
       catch (e) { showError("模擬資料生成失敗。"); }
     }, 350);
     return;
@@ -623,11 +634,13 @@ async function fetchWeather() {
   }
 
   // Try cache first
-  const cacheEntry = await readFromCache(loc.county, loc.township);
-  if (cacheEntry && isCacheValid(cacheEntry)) {
-    const age = getCacheAge(cacheEntry);
-    renderWeather(cacheEntry.data, true, age);
-    return;
+  if (!force) {
+    const cacheEntry = await readFromCache(loc.county, loc.township);
+    if (cacheEntry && isCacheValid(cacheEntry)) {
+      const age = getCacheAge(cacheEntry);
+      renderWeather(cacheEntry.data, true, age);
+      return;
+    }
   }
 
   // Cache miss / expired: fetch from API
@@ -647,10 +660,11 @@ async function fetchWeather() {
 
     const parsedData = parseCWAWeatherData(json, loc.township);
     await writeToCache(loc.county, loc.township, parsedData);
-    renderWeather(parsedData, false);
+    renderWeather(parsedData, false, "剛剛更新");
   } catch (err) {
     console.error("CWA API Error:", err);
     // If cache exists but stale, still show it with a warning
+    const cacheEntry = await readFromCache(loc.county, loc.township);
     if (cacheEntry?.data) {
       const age = getCacheAge(cacheEntry);
       renderWeather(cacheEntry.data, true, `⚠ 快取(${age})`);
@@ -699,6 +713,21 @@ function bindEvents() {
   locationSearchInput.addEventListener("input", () => {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => performSearch(locationSearchInput.value), 150);
+  });
+
+  // Refresh button
+  refreshBtn.addEventListener("click", async () => {
+    if (refreshBtn.classList.contains("spinning")) return;
+    refreshBtn.classList.add("spinning");
+    try {
+      await fetchWeather(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setTimeout(() => {
+        refreshBtn.classList.remove("spinning");
+      }, 500);
+    }
   });
 
   // Settings
