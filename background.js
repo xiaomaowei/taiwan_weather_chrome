@@ -9,6 +9,7 @@ const SETTINGS_KEY = "settings";
 
 const DEFAULT_SETTINGS = {
   apiKey: "CWA-3E823709-E043-4F98-AC95-A1A2986B328F",
+  moenvApiKey: "e905234d-bef9-47c7-9118-8e3f8cdaa846",
   cacheTtlMinutes: 60,
   demoMode: false,
   theme: "cute-light-theme"

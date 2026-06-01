@@ -8,7 +8,8 @@
     "alarms"
   ],
   "host_permissions": [
-    "*://*.cwa.gov.tw/*"
+    "*://*.cwa.gov.tw/*",
+    "*://*.moenv.gov.tw/*"
   ],
   "background": {
     "service_worker": "background.js"

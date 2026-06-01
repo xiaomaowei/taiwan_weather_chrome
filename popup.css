@@ -1019,3 +1019,213 @@ input:checked + .slider:before {
   30% { opacity: 1; }
   100% { transform: translateY(12px); opacity: 0; }
 }
+
+/* ── Air Quality Card ──────────────────────────────────────────── */
+.air-quality-card {
+  background-color: var(--card-bg);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--wobbly-radius-2);
+  padding: 10px 12px;
+  box-shadow: 4px 4px 0px var(--shadow-color);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.air-quality-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px var(--shadow-color);
+}
+
+.aqi-card-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.aqi-icon-area {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: leaf-sway 3s ease-in-out infinite;
+}
+
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+
+.aqi-data-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.aqi-data-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.aqi-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.aqi-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-color);
+}
+
+.aqi-value small {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.aqi-separator {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  margin: 0 1px;
+}
+
+.aqi-station-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.aqi-badge-area {
+  flex-shrink: 0;
+}
+
+.aqi-status-badge {
+  font-family: var(--font-primary);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border: 2px solid var(--border-color);
+  border-radius: 14px 8px 12px 10px / 10px 12px 8px 14px;
+  white-space: nowrap;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* AQI Level Colors */
+.aqi-level-good {
+  background-color: #a8e6cf;
+  color: #1b5e20;
+  --aqi-badge-bg: #a8e6cf;
+}
+
+.aqi-level-moderate {
+  background-color: #fff3b0;
+  color: #6d5700;
+  --aqi-badge-bg: #fff3b0;
+}
+
+.aqi-level-sensitive {
+  background-color: #ffcc80;
+  color: #7a3500;
+  --aqi-badge-bg: #ffcc80;
+}
+
+.aqi-level-unhealthy {
+  background-color: #ef9a9a;
+  color: #7f0000;
+  --aqi-badge-bg: #ef9a9a;
+}
+
+.aqi-level-very-unhealthy {
+  background-color: #ce93d8;
+  color: #4a0072;
+  --aqi-badge-bg: #ce93d8;
+}
+
+.aqi-level-hazardous {
+  background-color: #a1887f;
+  color: #3e1f00;
+  --aqi-badge-bg: #a1887f;
+}
+
+.aqi-level-unknown {
+  background-color: var(--details-bg);
+  color: var(--text-secondary);
+  --aqi-badge-bg: var(--details-bg);
+}
+
+/* Dark theme AQI level adjustments */
+.cute-dark-theme .aqi-level-good {
+  background-color: #2e7d50;
+  color: #c8f7d5;
+}
+
+.cute-dark-theme .aqi-level-moderate {
+  background-color: #8d7300;
+  color: #fff8d6;
+}
+
+.cute-dark-theme .aqi-level-sensitive {
+  background-color: #a85600;
+  color: #ffe0b2;
+}
+
+.cute-dark-theme .aqi-level-unhealthy {
+  background-color: #8b1a1a;
+  color: #ffcdd2;
+}
+
+.cute-dark-theme .aqi-level-very-unhealthy {
+  background-color: #5c2780;
+  color: #e1bee7;
+}
+
+.cute-dark-theme .aqi-level-hazardous {
+  background-color: #5d4037;
+  color: #d7ccc8;
+}
+
+/* No-key hint overlay */
+.aqi-no-key-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--card-bg);
+  border-radius: var(--wobbly-radius-2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.aqi-no-key-hint:hover {
+  background-color: var(--details-bg);
+}
+
+.aqi-no-key-hint span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.aqi-no-key-hint:hover span {
+  color: var(--accent-color);
+}
+
+.aqi-no-key-hint.hidden {
+  display: none !important;
+}

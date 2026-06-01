@@ -8,6 +8,7 @@ const MAX_FAVORITES = 5;
 
 const DEFAULT_SETTINGS = {
   apiKey: "CWA-3E823709-E043-4F98-AC95-A1A2986B328F",
+  moenvApiKey: "e905234d-bef9-47c7-9118-8e3f8cdaa846",
   cacheTtlMinutes: 60,
   demoMode: false,
   theme: "cute-light-theme"
@@ -56,6 +57,16 @@ const windScaleEl        = document.getElementById("detail-wind-scale");
 const windDirEl          = document.getElementById("detail-wind-dir");
 const forecastListEl     = document.getElementById("forecast-list");
 const demoModeBanner     = document.getElementById("demo-mode-banner");
+
+// AQI DOM references
+const airQualityCard     = document.getElementById("air-quality-card");
+const aqiValueEl         = document.getElementById("aqi-value");
+const pm25ValueEl        = document.getElementById("pm25-value");
+const aqiStatusBadge     = document.getElementById("aqi-status-badge");
+const aqiStationNameEl   = document.getElementById("aqi-station-name");
+const aqiNoKeyHint       = document.getElementById("aqi-no-key-hint");
+const moenvApiKeyInput   = document.getElementById("moenv-api-key-input");
+const toggleMoenvKeyVis  = document.getElementById("toggle-moenv-key-visibility");
 
 const locationSearchPanel = document.getElementById("location-search-panel");
 const locationSearchInput = document.getElementById("location-search-input");
@@ -479,6 +490,115 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
     chrome.runtime.sendMessage({ type: "UPDATE_ICON", temp: current.temp, wx: current.wx });
   }
+
+  // Fetch air quality data alongside weather
+  const loc = savedLocations[activeLocationIdx];
+  if (loc) fetchAirQuality(loc.county, loc.township);
+}
+
+// ── Air Quality (AQI & PM2.5) ─────────────────────────────────────────────────
+function getAqiLevel(aqi) {
+  const val = parseInt(aqi);
+  if (isNaN(val)) return { className: "aqi-level-unknown", label: "--" };
+  if (val <= 50)  return { className: "aqi-level-good",           label: "良好" };
+  if (val <= 100) return { className: "aqi-level-moderate",       label: "普通" };
+  if (val <= 150) return { className: "aqi-level-sensitive",      label: "對敏感族群不健康" };
+  if (val <= 200) return { className: "aqi-level-unhealthy",      label: "對所有族群不健康" };
+  if (val <= 300) return { className: "aqi-level-very-unhealthy", label: "非常不健康" };
+  return { className: "aqi-level-hazardous", label: "危害" };
+}
+
+function renderAirQuality(aqi, pm25, stationName) {
+  aqiNoKeyHint.classList.add("hidden");
+
+  aqiValueEl.textContent = aqi || "--";
+  pm25ValueEl.innerHTML = pm25 ? `${pm25} <small>μg/m³</small>` : `-- <small>μg/m³</small>`;
+  aqiStationNameEl.textContent = stationName ? `📍 ${stationName}` : "";
+
+  const level = getAqiLevel(aqi);
+  aqiStatusBadge.className = "aqi-status-badge " + level.className;
+  aqiStatusBadge.textContent = level.label;
+}
+
+function findBestStation(records, county, township) {
+  // Normalize: remove trailing "區"/"鄉"/"鎮"/"市"/"村" from township for fuzzy match
+  const townBase = township.replace(/[區鄉鎮市村]$/g, "");
+
+  // API returns lowercase field names: sitename, county, aqi, pm2.5, etc.
+  const countyRecords = records.filter(r => (r.county || r.County) === county);
+  if (countyRecords.length === 0) return null;
+
+  const getName = r => r.sitename || r.SiteName || "";
+
+  // 1. Try exact station name match to township base
+  const exactMatch = countyRecords.find(r => getName(r) === townBase);
+  if (exactMatch) return exactMatch;
+
+  // 2. Try partial match (station name contains township base or vice versa)
+  const partialMatch = countyRecords.find(r =>
+    getName(r).includes(townBase) || townBase.includes(getName(r))
+  );
+  if (partialMatch) return partialMatch;
+
+  // 3. Fallback to the first station in the same county
+  return countyRecords[0];
+}
+
+function getMockAqiData(county, township) {
+  const rand = getSeedRandom(county + township + "aqi");
+  let baseAqi = 35;
+  if (["高雄市","屏東縣","雲林縣","嘉義縣","嘉義市","臺南市"].includes(county)) baseAqi = 55;
+  else if (["花蓮縣","臺東縣","宜蘭縣"].includes(county)) baseAqi = 25;
+  else if (["澎湖縣","金門縣","連江縣"].includes(county)) baseAqi = 40;
+
+  const aqi = Math.round(baseAqi + (rand() * 30 - 10));
+  const pm25 = Math.round(aqi * 0.35 + rand() * 5);
+  const townBase = township.replace(/[區鄉鎮市村]$/g, "");
+  return { aqi: String(Math.max(0, aqi)), pm25: String(Math.max(0, pm25)), stationName: `${townBase}測站（模擬）` };
+}
+
+async function fetchAirQuality(county, township) {
+  // Demo mode: use mock data
+  if (currentSettings.demoMode) {
+    const mock = getMockAqiData(county, township);
+    renderAirQuality(mock.aqi, mock.pm25, mock.stationName);
+    return;
+  }
+
+  // No MOENV key: show hint overlay
+  const moenvKey = currentSettings.moenvApiKey?.trim();
+  if (!moenvKey) {
+    aqiNoKeyHint.classList.remove("hidden");
+    return;
+  }
+
+  aqiNoKeyHint.classList.add("hidden");
+
+  try {
+    const url = `https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&api_key=${moenvKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`MOENV API error: ${res.status}`);
+
+    const json = await res.json();
+    // API may return a direct array or wrap in { records: [...] }
+    const records = Array.isArray(json) ? json : (json.records || []);
+    if (records.length === 0) throw new Error("MOENV API returned no records");
+
+    const station = findBestStation(records, county, township);
+    if (!station) {
+      renderAirQuality("--", "--", "找不到該縣市的測站");
+      return;
+    }
+
+    const stationName = station.sitename || station.SiteName || "--";
+    const aqiVal = station.aqi || station.AQI || "--";
+    const pm25Val = station["pm2.5"] || station["PM2.5"] || "--";
+
+    renderAirQuality(aqiVal, pm25Val, `${stationName}測站`);
+  } catch (err) {
+    console.warn("AQI fetch error:", err.message);
+    renderAirQuality("--", "--", "空氣品質資料讀取失敗");
+  }
 }
 
 // ── Favorites Bar ─────────────────────────────────────────────────────────────
@@ -713,10 +833,12 @@ function applyTheme(themeClass) {
 
 function saveSettings() {
   const key        = apiKeyInput.value.trim();
+  const moenvKey   = moenvApiKeyInput.value.trim();
   const demo       = demoModeSwitch.checked;
   const ttl        = parseInt(cacheTtlSelect.value) || 60;
 
   currentSettings.apiKey           = key;
+  currentSettings.moenvApiKey      = moenvKey;
   currentSettings.demoMode         = demo;
   currentSettings.cacheTtlMinutes  = ttl;
 
@@ -763,6 +885,7 @@ function bindEvents() {
   // Settings
   settingsToggleBtn.addEventListener("click", () => {
     apiKeyInput.value  = currentSettings.apiKey;
+    moenvApiKeyInput.value = currentSettings.moenvApiKey || "";
     demoModeSwitch.checked = currentSettings.demoMode;
     cacheTtlSelect.value = String(currentSettings.cacheTtlMinutes || 60);
     settingsOverlay.classList.remove("hidden");
@@ -776,6 +899,22 @@ function bindEvents() {
     const isPass = apiKeyInput.type === "password";
     apiKeyInput.type = isPass ? "text" : "password";
     toggleKeyVisibility.textContent = isPass ? "隱藏" : "顯示";
+  });
+
+  // MOENV API key visibility
+  toggleMoenvKeyVis.addEventListener("click", () => {
+    const isPass = moenvApiKeyInput.type === "password";
+    moenvApiKeyInput.type = isPass ? "text" : "password";
+    toggleMoenvKeyVis.textContent = isPass ? "隱藏" : "顯示";
+  });
+
+  // AQI no-key hint: open settings
+  aqiNoKeyHint.addEventListener("click", () => {
+    apiKeyInput.value  = currentSettings.apiKey;
+    moenvApiKeyInput.value = currentSettings.moenvApiKey || "";
+    demoModeSwitch.checked = currentSettings.demoMode;
+    cacheTtlSelect.value = String(currentSettings.cacheTtlMinutes || 60);
+    settingsOverlay.classList.remove("hidden");
   });
 
   // Theme

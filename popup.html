@@ -120,6 +120,36 @@
         </div>
       </section>
 
+      <!-- Air Quality Card -->
+      <section id="air-quality-card" class="air-quality-card">
+        <div class="aqi-card-content">
+          <div class="aqi-icon-area">
+            <svg class="aqi-leaf-icon" viewBox="0 0 40 40" width="32" height="32">
+              <path d="M20 4 C10 8, 6 18, 8 28 C10 24, 14 20, 20 18 C26 20, 30 24, 32 28 C34 18, 30 8, 20 4Z" fill="var(--aqi-badge-bg, #a8e6cf)" stroke="var(--border-color)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 18 v14" stroke="var(--border-color)" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M20 22 Q16 19 14 21" stroke="var(--border-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M20 26 Q24 23 26 25" stroke="var(--border-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="aqi-data-area">
+            <div class="aqi-data-row">
+              <span class="aqi-label">AQI</span>
+              <span id="aqi-value" class="aqi-value">--</span>
+              <span class="aqi-separator">│</span>
+              <span class="aqi-label">PM2.5</span>
+              <span id="pm25-value" class="aqi-value">-- <small>μg/m³</small></span>
+            </div>
+            <div id="aqi-station-name" class="aqi-station-name"></div>
+          </div>
+          <div class="aqi-badge-area">
+            <span id="aqi-status-badge" class="aqi-status-badge aqi-level-unknown">--</span>
+          </div>
+        </div>
+        <div id="aqi-no-key-hint" class="aqi-no-key-hint hidden">
+          <span>🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
+        </div>
+      </section>
+
       <!-- 7-Day Forecast Section -->
       <section class="forecast-section">
         <h2 class="section-title">一週天氣預報</h2>
@@ -157,6 +187,18 @@
             <div class="password-input-wrapper">
               <input type="password" id="api-key-input" class="cute-input" placeholder="請貼上 CWA-XXXXXX 授權碼">
               <button id="toggle-key-visibility" class="visibility-btn" type="button" aria-label="切換可見性">顯示</button>
+            </div>
+          </div>
+
+          <!-- MOENV API Token Input -->
+          <div class="form-group">
+            <label for="moenv-api-key-input" class="form-label">
+              環境部 API 授權碼（空氣品質）
+              <a href="https://data.moenv.gov.tw/api-term" target="_blank" class="help-link">申請授權碼</a>
+            </label>
+            <div class="password-input-wrapper">
+              <input type="password" id="moenv-api-key-input" class="cute-input" placeholder="請貼上環境部 API Key">
+              <button id="toggle-moenv-key-visibility" class="visibility-btn" type="button" aria-label="切換可見性">顯示</button>
             </div>
           </div>
 
