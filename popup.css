@@ -123,6 +123,27 @@ body {
 
 .fav-chip.primary .fav-label { color: var(--accent-color); }
 
+.fav-star {
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+  line-height: 1;
+}
+
+.fav-star:hover {
+  transform: scale(1.2);
+  color: var(--accent-secondary);
+}
+
+.fav-star.primary {
+  color: var(--accent-secondary);
+}
+
 .fav-remove {
   font-size: 11px;
   color: var(--text-secondary);

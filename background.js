@@ -218,15 +218,23 @@ async function updateToolbarIcon(temp, wx) {
     ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Temperature number
-    const tempStr = temp !== "--" ? `${temp}°` : "--";
+    // Temperature number (no degree symbol to maximize font size and legibility)
+    const tempStr = temp !== "--" ? `${temp}` : "--";
     ctx.fillStyle = textColor;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Extra large font for temp only
-    ctx.font = `bold ${tempStr.length >= 4 ? 54 : 64}px Arial`;
-    ctx.fillText(tempStr, size / 2, size / 2 + 4);
+    // Dynamically adjust font size to make text as large as possible
+    let fontSize = 84;
+    if (tempStr.length === 1) {
+      fontSize = 96;
+    } else if (tempStr.length === 2) {
+      fontSize = 88;
+    } else if (tempStr.length >= 3) {
+      fontSize = 64;
+    }
+    ctx.font = `bold ${fontSize}px "Segoe UI", Arial, sans-serif`;
+    ctx.fillText(tempStr, size / 2, size / 2 + (fontSize * 0.05));
 
     const imageData = ctx.getImageData(0, 0, size, size);
     await chrome.action.setIcon({ imageData });

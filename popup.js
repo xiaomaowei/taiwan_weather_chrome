@@ -489,13 +489,22 @@ function renderFavoritesBar() {
     chip.className = "fav-chip" + (i === activeLocationIdx ? " active" : "") + (loc.isPrimary ? " primary" : "");
     chip.title = `${loc.county} ${loc.township}`;
 
-    // Label: show township name (short), star for primary
-    const label = loc.isPrimary ? `⭐ ${loc.township}` : loc.township;
-    chip.innerHTML = `<span class="fav-label">${label}</span><span class="fav-remove" data-idx="${i}" title="移除">✕</span>`;
+    // Label: show township name (short), star button for primary, hollow star for non-primary
+    const starHtml = loc.isPrimary 
+      ? `<span class="fav-star primary" title="目前預設">⭐</span>` 
+      : `<span class="fav-star" title="設為預設">☆</span>`;
+    chip.innerHTML = `${starHtml}<span class="fav-label">${loc.township}</span><span class="fav-remove" data-idx="${i}" title="移除">✕</span>`;
 
     chip.addEventListener("click", (e) => {
-      if (e.target.classList.contains("fav-remove")) return;
+      if (e.target.classList.contains("fav-remove") || e.target.classList.contains("fav-star")) return;
       switchToLocation(i);
+    });
+
+    chip.querySelector(".fav-star").addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!loc.isPrimary) {
+        setPrimaryLocation(i);
+      }
     });
 
     chip.querySelector(".fav-remove").addEventListener("click", (e) => {
@@ -513,17 +522,38 @@ function switchToLocation(idx) {
   fetchWeather();
 }
 
+function setPrimaryLocation(idx) {
+  savedLocations.forEach((loc, i) => {
+    loc.isPrimary = (i === idx);
+  });
+  activeLocationIdx = idx;
+  saveFavorites(() => {
+    renderFavoritesBar();
+    fetchWeather();
+    if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+      chrome.runtime.sendMessage({ type: "RESET_ALARM" });
+    }
+  });
+}
+
 function removeLocation(idx) {
   savedLocations.splice(idx, 1);
   // Ensure one primary exists
-  if (savedLocations.length > 0 && !savedLocations.find(l => l.isPrimary)) {
+  const wasPrimary = !savedLocations.find(l => l.isPrimary);
+  if (savedLocations.length > 0 && wasPrimary) {
     savedLocations[0].isPrimary = true;
   }
   if (activeLocationIdx >= savedLocations.length) activeLocationIdx = 0;
   saveFavorites(() => {
     renderFavoritesBar();
-    if (savedLocations.length > 0) fetchWeather();
-    else showError("請先新增一個收藏位置。");
+    if (savedLocations.length > 0) {
+      fetchWeather();
+      if (wasPrimary && typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage({ type: "RESET_ALARM" });
+      }
+    } else {
+      showError("請先新增一個收藏位置。");
+    }
   });
 }
 
@@ -773,6 +803,9 @@ function init() {
     result => {
       currentSettings = { ...DEFAULT_SETTINGS, ...(result[SETTINGS_KEY] || {}) };
       savedLocations  = result[LOCATIONS_KEY]?.length ? result[LOCATIONS_KEY] : [...DEFAULT_LOCATIONS];
+
+      const primaryIdx = savedLocations.findIndex(l => l.isPrimary);
+      activeLocationIdx = primaryIdx !== -1 ? primaryIdx : 0;
 
       applyTheme(currentSettings.theme || "cute-light-theme");
       renderFavoritesBar();
