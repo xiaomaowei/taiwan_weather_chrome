@@ -186,9 +186,9 @@ function getWeatherIconKey(wxText) {
   if (wxText.includes("多雲") && !wxText.includes("雨")) return "cloudy";
   if (wxText.includes("陰") && !wxText.includes("雨")) return "overcast";
   if (wxText.includes("雷")) return "thunderstorm";
-  if (wxText.includes("雨") || wxText.includes("落水")) return "rainy";
+  if (wxText.includes("雨") || wxText.includes("落水") || wxText.includes("暴")) return "rainy";
   if (wxText.includes("雪")) return "snowy";
-  if (wxText.includes("風") || wxText.includes("霧") || wxText.includes("霾")) return "windy";
+  if (wxText.includes("風") || wxText.includes("霧") || wxText.includes("霾") || wxText.includes("颱") || wxText.includes("颶")) return "windy";
   return "cloudy";
 }
 
