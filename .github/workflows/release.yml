@@ -1,0 +1,33 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Extension Files
+        run: |
+          mkdir -p dist/icons
+          cp manifest.json background.js popup.html popup.css popup.js city_county_data.js dist/
+          cp icons/icon16.png icons/icon48.png icons/icon128.png dist/icons/
+
+      - name: Zip extension
+        run: |
+          cd dist
+          zip -r ../taiwan_weather_chrome-${{ github.ref_name }}.zip *
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: taiwan_weather_chrome-${{ github.ref_name }}.zip
+          generate_release_notes: true
