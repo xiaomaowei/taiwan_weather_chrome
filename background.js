@@ -1,6 +1,9 @@
 // background.js — Taiwan Weather Chrome Extension Service Worker
 // Handles: periodic cache refresh, toolbar icon temperature display
 
+// Import shared data (includes CITY_COUNTY_DATA and TOWNSHIP_COORDS)
+try { importScripts('city_county_data.js'); } catch(e) { console.warn('[BG] importScripts failed:', e.message); }
+
 const CWA_API_BASE = "https://opendata.cwa.gov.tw/api/v1/rest/datastore";
 const ALARM_NAME = "weatherRefresh";
 const CACHE_KEY = "weatherCache";
@@ -189,9 +192,56 @@ async function fetchAndCacheWeather(county, township, apiKey) {
       return day;
     });
 
+  await supplementMissingPoPBG(forecast, county, township);
   const data = { current, forecast };
   await setCacheEntry(`${county}_${township}`, data);
   return data;
+}
+
+// ── Open-Meteo PoP Supplement (mirrors popup.js logic) ────────────────────
+async function fetchOpenMeteoPoPBG(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+                `&daily=precipitation_probability_max&timezone=Asia%2FTaipei&forecast_days=7`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Open-Meteo error: ${res.status}`);
+    const json = await res.json();
+    const dates = json?.daily?.time;
+    const pops  = json?.daily?.precipitation_probability_max;
+    if (!dates || !pops || dates.length !== pops.length) return null;
+    return dates.map((date, i) => ({ date, pop: pops[i] }));
+  } catch (err) {
+    console.warn("[BG] Open-Meteo fetch failed:", err.message);
+    return null;
+  }
+}
+
+async function supplementMissingPoPBG(forecast, county, township) {
+  const missingIdx = forecast.map((d, i) => i).filter(i => forecast[i].maxPop === null);
+  if (missingIdx.length === 0) return;
+
+  // TOWNSHIP_COORDS is available via importScripts; fall back gracefully if not
+  const coords = (typeof TOWNSHIP_COORDS !== 'undefined')
+    ? TOWNSHIP_COORDS[`${county}_${township}`]
+    : null;
+  if (!coords) {
+    console.warn(`[BG] No coords for ${county} ${township}`);
+    return;
+  }
+
+  const omData = await fetchOpenMeteoPoPBG(coords.lat, coords.lon);
+  if (!omData) return;
+
+  const omMap = {};
+  omData.forEach(({ date, pop }) => { omMap[date] = pop; });
+
+  missingIdx.forEach(i => {
+    const day = forecast[i];
+    if (day.maxPop === null && omMap[day.date] !== undefined) {
+      day.maxPop = omMap[day.date];
+      day.popSource = "open-meteo";
+    }
+  });
 }
 
 // ── Toolbar Icon: draw temperature on OffscreenCanvas ─────────────────────────

@@ -756,6 +756,54 @@ function performSearch(query) {
   searchResults.classList.remove("hidden");
 }
 
+// ── Open-Meteo PoP Supplement ────────────────────────────────────────────────
+// Calls Open-Meteo to get daily precipitation_probability_max (0-100) for 7 days.
+// Returns an array of { date: "YYYY-MM-DD", pop: number } or null on error.
+async function fetchOpenMeteoPoP(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+                `&daily=precipitation_probability_max&timezone=Asia%2FTaipei&forecast_days=7`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Open-Meteo error: ${res.status}`);
+    const json = await res.json();
+    const dates = json?.daily?.time;
+    const pops  = json?.daily?.precipitation_probability_max;
+    if (!dates || !pops || dates.length !== pops.length) return null;
+    return dates.map((date, i) => ({ date, pop: pops[i] }));
+  } catch (err) {
+    console.warn("[Popup] Open-Meteo fetch failed:", err.message);
+    return null;
+  }
+}
+
+// Merges Open-Meteo daily PoP into forecast days that are missing maxPop.
+async function supplementMissingPoP(forecast, county, township) {
+  const missingIdx = forecast.map((d, i) => i).filter(i => forecast[i].maxPop === null);
+  if (missingIdx.length === 0) return; // all days have CWA PoP, nothing to do
+
+  const coords = TOWNSHIP_COORDS[`${county}_${township}`];
+  if (!coords) {
+    console.warn(`[Popup] No coords for ${county} ${township}, skipping Open-Meteo.`);
+    return;
+  }
+
+  const omData = await fetchOpenMeteoPoP(coords.lat, coords.lon);
+  if (!omData) return;
+
+  // Build a date → pop lookup from Open-Meteo result
+  const omMap = {};
+  omData.forEach(({ date, pop }) => { omMap[date] = pop; });
+
+  // Fill only the days that are still missing
+  missingIdx.forEach(i => {
+    const day = forecast[i];
+    if (day.maxPop === null && omMap[day.date] !== undefined) {
+      day.maxPop = omMap[day.date];
+      day.popSource = "open-meteo"; // optional tag for debugging
+    }
+  });
+}
+
 // ── Fetch Weather (cache-first) ───────────────────────────────────────────────
 async function fetchWeather(force = false) {
   if (savedLocations.length === 0) { showError("請先新增一個收藏位置。"); return; }
@@ -809,6 +857,8 @@ async function fetchWeather(force = false) {
     if (json.success !== "true" || !json.records) throw new Error("氣象署 API 回傳失敗。");
 
     const parsedData = parseCWAWeatherData(json, loc.township);
+    // Supplement missing PoP for days 4-7 from Open-Meteo
+    await supplementMissingPoP(parsedData.forecast, loc.county, loc.township);
     await writeToCache(loc.county, loc.township, parsedData);
     renderWeather(parsedData, false, "剛剛更新");
   } catch (err) {

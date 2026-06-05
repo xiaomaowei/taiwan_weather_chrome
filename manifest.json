@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "*://*.cwa.gov.tw/*",
-    "*://*.moenv.gov.tw/*"
+    "*://*.moenv.gov.tw/*",
+    "*://api.open-meteo.com/*"
   ],
   "background": {
     "service_worker": "background.js"
