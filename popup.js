@@ -53,6 +53,9 @@ const currentIconEl      = document.getElementById("current-icon");
 const apparentTempEl     = document.getElementById("detail-apparent-temp");
 const humidityEl         = document.getElementById("detail-humidity");
 const rainProbEl         = document.getElementById("detail-rain-prob");
+const rainItemEl         = document.getElementById("detail-rain-item");
+const rainLabelEl        = document.getElementById("detail-rain-label");
+const rainAmountEl       = document.getElementById("detail-rain-amount");
 const windScaleEl        = document.getElementById("detail-wind-scale");
 const windDirEl          = document.getElementById("detail-wind-dir");
 const forecastListEl     = document.getElementById("forecast-list");
@@ -158,11 +161,31 @@ function getMockWeatherData(county, township) {
   const wx  = weatherTypes[idx];
   const temp = Math.round(baseTemp + (rand() * 6 - 3));
 
+  const mockRainAmount = (() => {
+    if (wx.type === "thunderstorm") {
+      // 雷陣雨：有 40% 機率為強降雨（past1hr >= 30 mm，觸發警戒）
+      const past1hr = rand() < 0.4
+        ? parseFloat((rand() * 50 + 30).toFixed(1))   // 30~80 mm（強降雨）
+        : parseFloat((rand() * 15 + 2).toFixed(1));   // 2~17 mm（一般陣雨）
+      const now = parseFloat((past1hr + rand() * 30).toFixed(1));
+      return { now: now.toFixed(1), past1hr: past1hr.toFixed(1) };
+    }
+    if (wx.type === "rainy") {
+      const v = rand();
+      if (v < 0.08) return { now: "微量", past1hr: "0.0" };
+      const now = parseFloat((v * 25 + 1).toFixed(1));
+      const past1hr = parseFloat((now * 0.15 + rand() * 2).toFixed(1)); // 今日累積的一部分
+      return { now: now.toFixed(1), past1hr: past1hr.toFixed(1) };
+    }
+    return { now: "0.0", past1hr: "0.0" };
+  })();
+
   const current = {
     temp: temp.toString(),
     apparentTemp: Math.round(temp + (wx.type==="rainy"?-2:1) + (rand()*2-1)).toString(),
     humidity: Math.round(65 + rand() * 25).toString(),
     rainProb: wx.type==="rainy" ? Math.round(50+rand()*50).toString() : wx.type==="thunderstorm" ? "85" : wx.type==="cloudy" ? "20" : "0",
+    rainAmount: mockRainAmount,
     windScale: String(Math.ceil(rand() * 5)),
     windDirection: windDirs[Math.floor(rand() * windDirs.length)],
     wx: wx.wx
@@ -456,8 +479,45 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   apparentTempEl.textContent = `${current.apparentTemp}°C`;
   humidityEl.textContent     = `${current.humidity}%`;
   rainProbEl.textContent     = `${current.rainProb}%`;
+
+  // ── Rain amount with heavy-rain alert logic ──────────────────────────────
+  // rainAmount can be: { now: string, past1hr: string } | null
+  const rain = current.rainAmount;
+  const HEAVY_RAIN_THRESHOLD = 30.0;
+
+  // Helper to format a rain string value for display
+  function formatRainVal(v) {
+    if (v === null || v === undefined) return "-- mm";
+    if (v === "微量") return "微量";
+    return `${v} mm`;
+  }
+
+  if (rain && typeof rain === "object") {
+    const past1hrNum = parseFloat(rain.past1hr);
+    const isHeavy = !isNaN(past1hrNum) && past1hrNum >= HEAVY_RAIN_THRESHOLD;
+
+    if (isHeavy) {
+      // ⚠️ 暴雨警戒模式：顯示時雨量並啟動閃爍
+      rainLabelEl.textContent = "時雨量";
+      rainAmountEl.textContent = formatRainVal(rain.past1hr);
+      rainItemEl.classList.add("heavy-rain-alert");
+    } else {
+      // 一般模式：顯示今日累積
+      rainLabelEl.textContent = "今日累積";
+      rainAmountEl.textContent = formatRainVal(rain.now);
+      rainItemEl.classList.remove("heavy-rain-alert");
+    }
+  } else {
+    // null 或格式異常 → 優雅降級
+    rainLabelEl.textContent = "今日累積";
+    rainAmountEl.textContent = "-- mm";
+    rainItemEl.classList.remove("heavy-rain-alert");
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   windScaleEl.textContent    = current.windScale !== "--" ? `${current.windScale} 級` : "--";
   windDirEl.textContent      = current.windDirection || "--";
+
 
   if (cacheAge) {
     cacheAgeBadge.textContent = cacheAge;
@@ -804,6 +864,76 @@ async function supplementMissingPoP(forecast, county, township) {
   });
 }
 
+// ── Fetch Current Rain Amount from CWA O-A0002-001 ─────────────────────────
+// Finds the nearest automatic rain gauge station to (county, township) and
+// returns the current accumulated precipitation as a display string.
+async function fetchRainAmount(county, township, apiKey) {
+  try {
+    const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${apiKey}&format=JSON`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Rain API error: ${res.status}`);
+    const json = await res.json();
+
+    const stations = json?.records?.Station;
+    if (!Array.isArray(stations) || stations.length === 0) throw new Error("No rain station records");
+
+    // Filter to same county first
+    const countyStations = stations.filter(s => (s.GeoInfo?.CountyName || "") === county);
+    const pool = countyStations.length > 0 ? countyStations : stations;
+
+    // Helper: Haversine-light squared distance (degrees, good enough for matching)
+    const coordsKey = `${county}_${township}`;
+    const targetCoords = TOWNSHIP_COORDS[coordsKey];
+
+    let bestStation = null;
+
+    if (targetCoords) {
+      // Find closest station by squared Euclidean distance in lat/lon
+      let minDist = Infinity;
+      pool.forEach(s => {
+        const coordArr = s.GeoInfo?.Coordinates;
+        if (!coordArr) return;
+        // Pick WGS84 coordinate entry
+        const wgs = Array.isArray(coordArr)
+          ? coordArr.find(c => (c.CoordinateName || "").includes("WGS84")) || coordArr[0]
+          : coordArr;
+        const lat = parseFloat(wgs?.StationLatitude);
+        const lon = parseFloat(wgs?.StationLongitude);
+        if (isNaN(lat) || isNaN(lon)) return;
+        const dist = (lat - targetCoords.lat) ** 2 + (lon - targetCoords.lon) ** 2;
+        if (dist < minDist) { minDist = dist; bestStation = s; }
+      });
+    } else {
+      // No coordinates: try name matching, else take first in county
+      const townBase = township.replace(/[區鄉鎮市村]$/g, "");
+      bestStation = pool.find(s => (s.GeoInfo?.TownName || "").includes(townBase)) || pool[0];
+    }
+
+    if (!bestStation) return null;
+
+    // Helper: parse a raw rainfall value from CWA API
+    function parseRaw(raw) {
+      if (raw === undefined || raw === null || raw === -99 || raw === "-99" || raw === "X" || raw === "x") return "0.0";
+      if (raw === -98 || raw === "-98") return "0.0"; // No rain for 6+ hours
+      if (raw === "T" || raw === "t") return "微量";
+      const val = parseFloat(raw);
+      if (isNaN(val) || val < 0) return "0.0";
+      return (Math.round(val * 10) / 10).toFixed(1);
+    }
+
+    const nowRaw    = bestStation.RainfallElement?.Now?.Precipitation;
+    const past1Raw  = bestStation.RainfallElement?.Past1hr?.Precipitation;
+
+    return {
+      now:     parseRaw(nowRaw),
+      past1hr: parseRaw(past1Raw)
+    };
+  } catch (err) {
+    console.warn("[Popup] fetchRainAmount failed:", err.message);
+    return null; // null → renders as "-- mm" (graceful fallback)
+  }
+}
+
 // ── Fetch Weather (cache-first) ───────────────────────────────────────────────
 async function fetchWeather(force = false) {
   if (savedLocations.length === 0) { showError("請先新增一個收藏位置。"); return; }
@@ -857,8 +987,12 @@ async function fetchWeather(force = false) {
     if (json.success !== "true" || !json.records) throw new Error("氣象署 API 回傳失敗。");
 
     const parsedData = parseCWAWeatherData(json, loc.township);
-    // Supplement missing PoP for days 4-7 from Open-Meteo
-    await supplementMissingPoP(parsedData.forecast, loc.county, loc.township);
+    // Supplement missing PoP for days 4-7 from Open-Meteo, and fetch rain amount in parallel
+    const [_, rainAmount] = await Promise.all([
+      supplementMissingPoP(parsedData.forecast, loc.county, loc.township),
+      fetchRainAmount(loc.county, loc.township, currentSettings.apiKey)
+    ]);
+    parsedData.current.rainAmount = rainAmount;
     await writeToCache(loc.county, loc.township, parsedData);
     renderWeather(parsedData, false, "剛剛更新");
   } catch (err) {
