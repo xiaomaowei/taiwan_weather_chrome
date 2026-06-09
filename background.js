@@ -76,12 +76,76 @@ function safeGetVal(ev, ...keys) {
   return vals.length > 0 ? vals[0] : null;
 }
 
+async function fetchRainAmountBG(county, township, apiKey) {
+  try {
+    const url = `${CWA_API_BASE}/O-A0002-001?Authorization=${apiKey}&format=JSON`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Rain API error: ${res.status}`);
+    const json = await res.json();
+
+    const stations = json?.records?.Station;
+    if (!Array.isArray(stations) || stations.length === 0) throw new Error("No rain station records");
+
+    const countyStations = stations.filter(s => (s.GeoInfo?.CountyName || "") === county);
+    const pool = countyStations.length > 0 ? countyStations : stations;
+
+    const coordsKey = `${county}_${township}`;
+    const coords = (typeof TOWNSHIP_COORDS !== 'undefined') ? TOWNSHIP_COORDS[coordsKey] : null;
+
+    let bestStation = null;
+
+    if (coords) {
+      let minDist = Infinity;
+      pool.forEach(s => {
+        const coordArr = s.GeoInfo?.Coordinates;
+        if (!coordArr) return;
+        const wgs = Array.isArray(coordArr)
+          ? coordArr.find(c => (c.CoordinateName || "").includes("WGS84")) || coordArr[0]
+          : coordArr;
+        const lat = parseFloat(wgs?.StationLatitude);
+        const lon = parseFloat(wgs?.StationLongitude);
+        if (isNaN(lat) || isNaN(lon)) return;
+        const dist = (lat - coords.lat) ** 2 + (lon - coords.lon) ** 2;
+        if (dist < minDist) { minDist = dist; bestStation = s; }
+      });
+    } else {
+      const townBase = township.replace(/[區鄉鎮市村]$/g, "");
+      bestStation = pool.find(s => (s.GeoInfo?.TownName || "").includes(townBase)) || pool[0];
+    }
+
+    if (!bestStation) return null;
+
+    function parseRaw(raw) {
+      if (raw === undefined || raw === null || raw === -99 || raw === "-99" || raw === "X" || raw === "x") return "0.0";
+      if (raw === -98 || raw === "-98") return "0.0";
+      if (raw === "T" || raw === "t") return "微量";
+      const val = parseFloat(raw);
+      if (isNaN(val) || val < 0) return "0.0";
+      return (Math.round(val * 10) / 10).toFixed(1);
+    }
+
+    const nowRaw    = bestStation.RainfallElement?.Now?.Precipitation;
+    const past1Raw  = bestStation.RainfallElement?.Past1hr?.Precipitation;
+
+    return {
+      now:     parseRaw(nowRaw),
+      past1hr: parseRaw(past1Raw)
+    };
+  } catch (err) {
+    console.warn("[BG] fetchRainAmountBG failed:", err.message);
+    return null;
+  }
+}
+
 async function fetchAndCacheWeather(county, township, apiKey) {
   const datasetId = COUNTY_DATASET_MAP[county];
   if (!datasetId) throw new Error(`Unknown county: ${county}`);
 
   const url = `${CWA_API_BASE}/${datasetId}?Authorization=${apiKey}&locationName=${encodeURIComponent(township)}`;
-  const res = await fetch(url);
+  const [res, rainAmount] = await Promise.all([
+    fetch(url),
+    fetchRainAmountBG(county, township, apiKey)
+  ]);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
 
   const json = await res.json();
@@ -140,7 +204,8 @@ async function fetchAndCacheWeather(county, township, apiKey) {
     rainProb:      getVal(popT,   "ProbabilityOfPrecipitation") || "0",
     windScale:     getVal(windT,  "BeaufortScale")          || "--",
     windDirection: getVal(windDT, "WindDirection")          || "--",
-    wx:            getVal(wxT,    "Weather")                || "多雲"
+    wx:            getVal(wxT,    "Weather")                || "多雲",
+    rainAmount:    rainAmount
   };
 
   // Build 7-day forecast
