@@ -1,4 +1,4 @@
-// Taiwan Weather Chrome Extension — Popup Logic v2
+// Taiwan Weather Chrome Extension — Popup Logic v2.2 (i18n)
 
 // ── Constants & Storage Keys ──────────────────────────────────────────────────
 const CACHE_KEY     = "weatherCache";
@@ -11,12 +11,147 @@ const DEFAULT_SETTINGS = {
   moenvApiKey: "",
   cacheTtlMinutes: 60,
   demoMode: false,
-  theme: "cute-light-theme"
+  theme: "cute-light-theme",
+  lang: "auto"
 };
 
 const DEFAULT_LOCATIONS = [
   { county: "臺北市", township: "北投區", isPrimary: true }
 ];
+
+// ── i18n State ────────────────────────────────────────────────────────────────
+// Active UI language: "zh_TW" or "en"
+let activeUILang = "zh_TW";
+
+// Get a localized message string.
+// Falls back to chrome.i18n if available, otherwise uses our own lookup table.
+const I18N_STRINGS = {
+  zh_TW: {
+    settingsTitle: "設定", settingsAriaLabel: "設定", settingsPageTitle: "設定頁面",
+    settingsClose: "關閉", settingsSave: "儲存設定", settingsSaved: "已儲存！✨",
+    searchPlaceholder: "搜尋縣市或鄉鎮…", loadingText: "正在讀取天氣資料...",
+    loadingDefault: "載入中", errorRetry: "重新嘗試", errorDefault: "糟糕！連線失敗了。",
+    errorReadFailed: "讀取失敗，請檢查連線或 API Key。",
+    errorNoLocation: "請先新增一個收藏位置。",
+    errorApiKey: "未輸入 CWA API 授權碼，請在設定中填寫，或開啟「示範模式」。",
+    errorInvalidApiKey: "無效的 API 授權碼，請重新檢查設定。",
+    errorApiFailed: "氣象署 API 回傳失敗。",
+    errorFetchFailed: "天氣資料抓取失敗。請確認 API 授權碼是否正確，或開啟示範模式。",
+    cacheJustUpdated: "剛剛更新", cacheAgeBadgeDefault: "快取中",
+    refreshTitle: "強制更新", refreshAria: "強制更新",
+    labelApparentTemp: "體感溫度", labelHumidity: "相對濕度",
+    labelRainProb: "降雨機率", labelDailyRain: "今日累積", labelHourlyRain: "時雨量",
+    labelWindScale: "風力級別", labelWindScaleUnit: "級", labelWindDir: "風向",
+    forecastTitle: "一週天氣預報", forecastToday: "今天", forecastTomorrow: "明天",
+    forecastSun: "週日", forecastMon: "週一", forecastTue: "週二",
+    forecastWed: "週三", forecastThu: "週四", forecastFri: "週五", forecastSat: "週六",
+    demoBanner: "目前處於「示範模式」，請至設定輸入 API Key 以獲取即時天氣。",
+    apiKeyLabel: "中央氣象署 API 授權碼", apiKeyApply: "申請授權碼",
+    apiKeyPlaceholder: "請貼上 CWA-XXXXXX 授權碼",
+    apiKeyShow: "顯示", apiKeyHide: "隱藏",
+    moenvApiKeyLabel: "環境部 API 授權碼（空氣品質）", moenvApiKeyApply: "申請授權碼",
+    moenvApiKeyPlaceholder: "請貼上環境部 API Key",
+    cacheTtlLabel: "資料更新頻率",
+    cacheTtl1h: "每 1 小時更新", cacheTtl3h: "每 3 小時更新",
+    cacheTtl6h: "每 6 小時更新", cacheTtl12h: "每 12 小時更新",
+    demoModeLabel: "示範模式 (使用模擬資料)",
+    themeLabel: "選擇主題配色", themeLightBtn: "可愛粉白 (Light)", themeDarkBtn: "舒適灰藍 (Dark)",
+    languageLabel: "語言", langAuto: "自動偵測", langZhTW: "繁體中文", langEn: "English",
+    favStarPrimaryTitle: "目前預設", favStarTitle: "設為預設", favRemoveTitle: "移除",
+    favMaxAlert: "最多只能收藏 5 個位置！", favSaved: "已收藏",
+    aqiNoKeyHint: "🌿 點此設定環境部 API 金鑰以顯示空氣品質",
+    aqiStationNotFound: "找不到該縣市的測站", aqiStationSuffix: "測站",
+    aqiStationSimSuffix: "測站（模擬）", aqiFetchFailed: "空氣品質資料讀取失敗",
+    aqiGood: "良好", aqiModerate: "普通", aqiSensitive: "對敏感族群不健康",
+    aqiUnhealthy: "對所有族群不健康", aqiVeryUnhealthy: "非常不健康", aqiHazardous: "危害",
+  },
+  en: {
+    settingsTitle: "Settings", settingsAriaLabel: "Settings", settingsPageTitle: "Settings",
+    settingsClose: "Close", settingsSave: "Save Settings", settingsSaved: "Saved! ✨",
+    searchPlaceholder: "Search city or township…", loadingText: "Loading weather data...",
+    loadingDefault: "Loading", errorRetry: "Retry", errorDefault: "Oops! Connection failed.",
+    errorReadFailed: "Failed to load. Please check your connection or API key.",
+    errorNoLocation: "Please add a saved location first.",
+    errorApiKey: "CWA API key not set. Please add it in Settings, or enable Demo Mode.",
+    errorInvalidApiKey: "Invalid API key. Please check your settings.",
+    errorApiFailed: "CWA API returned an error.",
+    errorFetchFailed: "Failed to fetch weather data. Please verify your API key or enable Demo Mode.",
+    cacheJustUpdated: "Just updated", cacheAgeBadgeDefault: "Cached",
+    refreshTitle: "Force refresh", refreshAria: "Force refresh",
+    labelApparentTemp: "Feels Like", labelHumidity: "Humidity",
+    labelRainProb: "Rain Prob.", labelDailyRain: "Daily Total", labelHourlyRain: "Hourly Rain",
+    labelWindScale: "Wind Scale", labelWindScaleUnit: "", labelWindDir: "Wind Direction",
+    forecastTitle: "7-Day Forecast", forecastToday: "Today", forecastTomorrow: "Tomorrow",
+    forecastSun: "Sun", forecastMon: "Mon", forecastTue: "Tue",
+    forecastWed: "Wed", forecastThu: "Thu", forecastFri: "Fri", forecastSat: "Sat",
+    demoBanner: "Demo Mode is active. Enter your API Key in Settings to get live weather.",
+    apiKeyLabel: "CWA API Authorization Key", apiKeyApply: "Apply for key",
+    apiKeyPlaceholder: "Paste your CWA-XXXXXX key here",
+    apiKeyShow: "Show", apiKeyHide: "Hide",
+    moenvApiKeyLabel: "MOENV API Key (Air Quality)", moenvApiKeyApply: "Apply for key",
+    moenvApiKeyPlaceholder: "Paste your MOENV API Key here",
+    cacheTtlLabel: "Update Frequency",
+    cacheTtl1h: "Every 1 hour", cacheTtl3h: "Every 3 hours",
+    cacheTtl6h: "Every 6 hours", cacheTtl12h: "Every 12 hours",
+    demoModeLabel: "Demo Mode (use simulated data)",
+    themeLabel: "Color Theme", themeLightBtn: "Cute Pink (Light)", themeDarkBtn: "Cool Grey-Blue (Dark)",
+    languageLabel: "Language", langAuto: "Auto-detect", langZhTW: "繁體中文", langEn: "English",
+    favStarPrimaryTitle: "Current default", favStarTitle: "Set as default", favRemoveTitle: "Remove",
+    favMaxAlert: "You can only save up to 5 locations!", favSaved: "Saved",
+    aqiNoKeyHint: "🌿 Click to set MOENV API key for air quality data",
+    aqiStationNotFound: "No station found for this area", aqiStationSuffix: " Station",
+    aqiStationSimSuffix: " Station (Demo)", aqiFetchFailed: "Failed to load air quality data",
+    aqiGood: "Good", aqiModerate: "Moderate", aqiSensitive: "Unhealthy for Sensitive Groups",
+    aqiUnhealthy: "Unhealthy", aqiVeryUnhealthy: "Very Unhealthy", aqiHazardous: "Hazardous",
+  }
+};
+
+function t(key) {
+  const strings = I18N_STRINGS[activeUILang] || I18N_STRINGS["zh_TW"];
+  return strings[key] !== undefined ? strings[key] : (I18N_STRINGS["zh_TW"][key] || key);
+}
+
+// Resolve active UI language from settings
+function resolveUILang(settings) {
+  const pref = settings.lang || "auto";
+  if (pref === "auto") {
+    // Use chrome.i18n to detect browser UI language
+    if (typeof chrome !== "undefined" && chrome.i18n?.getUILanguage) {
+      const uiLang = chrome.i18n.getUILanguage();
+      if (uiLang && uiLang.toLowerCase().startsWith("zh")) return "zh_TW";
+      if (uiLang && uiLang.toLowerCase().startsWith("en")) return "en";
+    }
+    return "zh_TW"; // default fallback
+  }
+  if (pref === "en") return "en";
+  return "zh_TW";
+}
+
+// Apply i18n to all DOM elements with data-i18n-* attributes
+function applyI18nDOM() {
+  // data-i18n="key" → sets textContent
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  });
+  // data-i18n-placeholder="key" → sets placeholder
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    el.placeholder = t(key);
+  });
+  // data-i18n-title="key" → sets title
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const key = el.getAttribute("data-i18n-title");
+    el.title = t(key);
+  });
+  // data-i18n-aria-label="key" → sets aria-label
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    el.setAttribute("aria-label", t(key));
+  });
+  // Update html lang attribute
+  document.documentElement.lang = activeUILang === "en" ? "en" : "zh-TW";
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentSettings  = { ...DEFAULT_SETTINGS };
@@ -35,6 +170,7 @@ const demoModeSwitch     = document.getElementById("demo-mode-switch");
 const cacheTtlSelect     = document.getElementById("cache-ttl-select");
 const themeBtnLight      = document.getElementById("theme-btn-light");
 const themeBtnDark       = document.getElementById("theme-btn-dark");
+const langSelect         = document.getElementById("lang-select");
 
 const loadingPanel       = document.getElementById("loading-panel");
 const errorPanel         = document.getElementById("error-panel");
@@ -111,9 +247,9 @@ function isCacheValid(entry) {
 function getCacheAge(entry) {
   if (!entry?.fetchedAt) return "";
   const mins = Math.floor((Date.now() - entry.fetchedAt) / 60000);
-  if (mins < 1) return "剛剛更新";
-  if (mins < 60) return `${mins} 分鐘前`;
-  return `${Math.floor(mins / 60)} 小時前`;
+  if (mins < 1) return t("cacheJustUpdated");
+  if (mins < 60) return `${mins} ${activeUILang === "en" ? "min ago" : "分鐘前"}`;
+  return `${Math.floor(mins / 60)} ${activeUILang === "en" ? "hr ago" : "小時前"}`;
 }
 
 async function readFromCache(county, township) {
@@ -150,6 +286,7 @@ function getMockWeatherData(county, township) {
   else if (["連江縣","金門縣","澎湖縣"].includes(county)) baseTemp = 18;
   if (/阿里山|和平|信義|仁愛|那瑪夏|茂林|桃源|大同|南澳/.test(township)) baseTemp -= 8;
 
+  // Weather types stored as internal type codes; translated at render time
   const weatherTypes = [
     { wx:"晴天",type:"sunny"}, {wx:"多雲時晴",type:"cloudy"}, {wx:"多雲",type:"cloudy"},
     { wx:"陰天",type:"overcast"}, {wx:"多雲短暫雨",type:"rainy"}, {wx:"陰短暫雨",type:"rainy"},
@@ -163,10 +300,9 @@ function getMockWeatherData(county, township) {
 
   const mockRainAmount = (() => {
     if (wx.type === "thunderstorm") {
-      // 雷陣雨：有 40% 機率為強降雨（past1hr >= 30 mm，觸發警戒）
       const past1hr = rand() < 0.4
-        ? parseFloat((rand() * 50 + 30).toFixed(1))   // 30~80 mm（強降雨）
-        : parseFloat((rand() * 15 + 2).toFixed(1));   // 2~17 mm（一般陣雨）
+        ? parseFloat((rand() * 50 + 30).toFixed(1))
+        : parseFloat((rand() * 15 + 2).toFixed(1));
       const now = parseFloat((past1hr + rand() * 30).toFixed(1));
       return { now: now.toFixed(1), past1hr: past1hr.toFixed(1) };
     }
@@ -174,7 +310,7 @@ function getMockWeatherData(county, township) {
       const v = rand();
       if (v < 0.08) return { now: "微量", past1hr: "0.0" };
       const now = parseFloat((v * 25 + 1).toFixed(1));
-      const past1hr = parseFloat((now * 0.15 + rand() * 2).toFixed(1)); // 今日累積的一部分
+      const past1hr = parseFloat((now * 0.15 + rand() * 2).toFixed(1));
       return { now: now.toFixed(1), past1hr: past1hr.toFixed(1) };
     }
     return { now: "0.0", past1hr: "0.0" };
@@ -191,7 +327,7 @@ function getMockWeatherData(county, township) {
     wx: wx.wx
   };
 
-  const daysOfWeek = ["週日","週一","週二","週三","週四","週五","週六"];
+  // Forecast: store raw date strings only; day labels computed dynamically at render time
   const today = new Date();
   const forecast = [];
   for (let i = 0; i < 7; i++) {
@@ -201,10 +337,11 @@ function getMockWeatherData(county, township) {
     const wo = weatherTypes[wi];
     const maxT = Math.round(baseTemp + (dr()*4+1));
     const minT = Math.round(baseTemp - (dr()*4+2));
+    // Store date only; displayName is computed in renderWeather()
     forecast.push({
       date: d.toISOString().split("T")[0],
-      dayName: daysOfWeek[d.getDay()],
-      displayName: i===0?"今天": i===1?"明天": daysOfWeek[d.getDay()],
+      dayOfWeek: d.getDay(), // 0=Sun,1=Mon,...,6=Sat
+      dayIndex: i,
       minT, maxT, wx: wo.wx,
       rainProb: wo.type==="rainy"?Math.round(50+dr()*50): wo.type==="thunderstorm"?80: wo.type==="cloudy"?20:0
     });
@@ -223,6 +360,14 @@ function getWeatherIconKey(wxText) {
   if (wxText.includes("雨") || wxText.includes("落水") || wxText.includes("暴")) return "rainy";
   if (wxText.includes("雪")) return "snowy";
   if (wxText.includes("風") || wxText.includes("霧") || wxText.includes("霾") || wxText.includes("颱") || wxText.includes("颶")) return "windy";
+  // Also handle English wx strings (for display, icon key detection uses original Chinese)
+  if (wxText === "Sunny") return "sunny";
+  if (wxText === "Partly Cloudy" || wxText === "Cloudy") return "cloudy";
+  if (wxText === "Overcast") return "overcast";
+  if (wxText === "Thunderstorm") return "thunderstorm";
+  if (wxText === "Rainy") return "rainy";
+  if (wxText === "Snowy") return "snowy";
+  if (wxText === "Windy") return "windy";
   return "cloudy";
 }
 
@@ -401,7 +546,6 @@ function parseCWAWeatherData(data, townshipName) {
   };
 
   const forecastMap = {};
-  const daysOfWeek = ["週日","週一","週二","週三","週四","週五","週六"];
 
   wxTimes.forEach((t, idx) => {
     if (!t) return;
@@ -409,12 +553,12 @@ function parseCWAWeatherData(data, townshipName) {
     const dateKey  = startStr.includes("T") ? startStr.split("T")[0] : startStr.split(" ")[0];
     if (!dateKey) return;
     const dateObj  = new Date(dateKey + "T00:00:00");
-    const dayName  = daysOfWeek[dateObj.getDay()];
+    const dayOfWeek = dateObj.getDay(); // 0=Sun
     const hourPart = startStr.includes("T") ? parseInt(startStr.split("T")[1].slice(0,2)) : 0;
     const isDay    = hourPart >= 6 && hourPart < 18;
 
     if (!forecastMap[dateKey]) {
-      forecastMap[dateKey] = { date:dateKey, dayName, minT:999, maxT:-999, maxPop:null, dayWx:"", nightWx:"", wx:"" };
+      forecastMap[dateKey] = { date:dateKey, dayOfWeek, minT:999, maxT:-999, maxPop:null, dayWx:"", nightWx:"", wx:"" };
     }
     const wxVal = getTV(t, "Weather", "value") || "";
     if (isDay) forecastMap[dateKey].dayWx = wxVal; else forecastMap[dateKey].nightWx = wxVal;
@@ -439,15 +583,30 @@ function parseCWAWeatherData(data, townshipName) {
     }
   });
 
-  const forecast = Object.values(forecastMap).sort((a,b) => a.date.localeCompare(b.date)).slice(0,7).map((day,i) => {
-    day.wx          = day.dayWx || day.nightWx || "多雲";
-    day.displayName = i===0?"今天":i===1?"明天":day.dayName;
+  const todayDate = new Date().toISOString().split("T")[0];
+  const forecast = Object.values(forecastMap).sort((a,b) => a.date.localeCompare(b.date)).slice(0,7).map((day, i) => {
+    day.wx = day.dayWx || day.nightWx || "多雲";
+    // dayIndex: 0=today, 1=tomorrow, 2+=day-of-week
+    day.dayIndex = day.date === todayDate ? 0 : (i === 1 && Object.values(forecastMap).sort((a,b) => a.date.localeCompare(b.date))[1]?.date > todayDate ? 1 : i);
+    // Recalculate dayIndex by date comparison
+    const dayDiff = Math.round((new Date(day.date + "T00:00:00") - new Date(todayDate + "T00:00:00")) / 86400000);
+    day.dayIndex = dayDiff;
     if (day.minT === 999)  day.minT = 20;
     if (day.maxT === -999) day.maxT = 28;
     return day;
   });
 
   return { current, forecast };
+}
+
+// ── Dynamic Forecast Day Label ─────────────────────────────────────────────────
+// Returns localized day label based on dayIndex (0=today, 1=tomorrow, 2+=day of week)
+const DAY_OF_WEEK_KEYS = ["forecastSun","forecastMon","forecastTue","forecastWed","forecastThu","forecastFri","forecastSat"];
+
+function getForecastDayLabel(dayIndex, dayOfWeek) {
+  if (dayIndex === 0) return t("forecastToday");
+  if (dayIndex === 1) return t("forecastTomorrow");
+  return t(DAY_OF_WEEK_KEYS[dayOfWeek]);
 }
 
 // ── UI State Helpers ──────────────────────────────────────────────────────────
@@ -460,7 +619,7 @@ function showError(msg) {
   loadingPanel.classList.add("hidden");
   weatherContent.classList.add("hidden");
   errorPanel.classList.remove("hidden");
-  errorMessageEl.textContent = msg || "讀取失敗，請檢查連線或 API Key。";
+  errorMessageEl.textContent = msg || t("errorReadFailed");
 }
 
 function showWeatherContent() {
@@ -474,21 +633,22 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   const { current, forecast } = weatherData;
 
   currentTempEl.textContent  = `${current.temp}°`;
-  currentWxEl.textContent    = current.wx;
+  // Translate Wx text based on active language
+  currentWxEl.textContent    = (typeof translateWx === "function")
+    ? translateWx(current.wx, activeUILang)
+    : current.wx;
   currentIconEl.innerHTML    = getSVGIconHtml(current.wx);
   apparentTempEl.textContent = `${current.apparentTemp}°C`;
   humidityEl.textContent     = `${current.humidity}%`;
   rainProbEl.textContent     = `${current.rainProb}%`;
 
   // ── Rain amount with heavy-rain alert logic ──────────────────────────────
-  // rainAmount can be: { now: string, past1hr: string } | null
   const rain = current.rainAmount;
   const HEAVY_RAIN_THRESHOLD = 30.0;
 
-  // Helper to format a rain string value for display
   function formatRainVal(v) {
     if (v === null || v === undefined) return "-- mm";
-    if (v === "微量") return "微量";
+    if (v === "微量") return activeUILang === "en" ? "Trace" : "微量";
     return `${v} mm`;
   }
 
@@ -497,27 +657,34 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
     const isHeavy = !isNaN(past1hrNum) && past1hrNum >= HEAVY_RAIN_THRESHOLD;
 
     if (isHeavy) {
-      // ⚠️ 暴雨警戒模式：顯示時雨量並啟動閃爍
-      rainLabelEl.textContent = "時雨量";
+      rainLabelEl.textContent = t("labelHourlyRain");
       rainAmountEl.textContent = formatRainVal(rain.past1hr);
       rainItemEl.classList.add("heavy-rain-alert");
     } else {
-      // 一般模式：顯示今日累積
-      rainLabelEl.textContent = "今日累積";
+      rainLabelEl.textContent = t("labelDailyRain");
       rainAmountEl.textContent = formatRainVal(rain.now);
       rainItemEl.classList.remove("heavy-rain-alert");
     }
   } else {
-    // null 或格式異常 → 優雅降級
-    rainLabelEl.textContent = "今日累積";
+    rainLabelEl.textContent = t("labelDailyRain");
     rainAmountEl.textContent = "-- mm";
     rainItemEl.classList.remove("heavy-rain-alert");
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  windScaleEl.textContent    = current.windScale !== "--" ? `${current.windScale} 級` : "--";
-  windDirEl.textContent      = current.windDirection || "--";
+  // Wind scale display
+  if (current.windScale !== "--") {
+    const unit = t("labelWindScaleUnit");
+    windScaleEl.textContent = unit ? `${current.windScale} ${unit}` : `${current.windScale}`;
+  } else {
+    windScaleEl.textContent = "--";
+  }
 
+  // Wind direction translated
+  const translatedWindDir = (typeof translateWindDir === "function")
+    ? translateWindDir(current.windDirection, activeUILang)
+    : current.windDirection;
+  windDirEl.textContent = translatedWindDir || "--";
 
   if (cacheAge) {
     cacheAgeBadge.textContent = cacheAge;
@@ -534,8 +701,14 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
     const hasPop = day.rainProb !== undefined ? true : (day.maxPop !== null && day.maxPop !== undefined);
     const popVal = day.rainProb !== undefined ? day.rainProb : day.maxPop;
     const rainProbStr = hasPop ? `💧${popVal}%` : `💧--`;
+    // Translate forecast Wx
+    const dayWxDisplay = (typeof translateWx === "function")
+      ? translateWx(day.wx, activeUILang)
+      : day.wx;
+    // Compute day label dynamically
+    const dayLabel = getForecastDayLabel(day.dayIndex !== undefined ? day.dayIndex : idx, day.dayOfWeek !== undefined ? day.dayOfWeek : 0);
     col.innerHTML = `
-      <span class="forecast-day-label">${day.displayName}</span>
+      <span class="forecast-day-label">${dayLabel}</span>
       <span class="forecast-col-icon">${getSVGIconHtml(day.wx)}</span>
       <span class="forecast-temp-max">${day.maxT}°</span>
       <span class="forecast-temp-min">${day.minT}°</span>
@@ -560,12 +733,12 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
 function getAqiLevel(aqi) {
   const val = parseInt(aqi);
   if (isNaN(val)) return { className: "aqi-level-unknown", label: "--" };
-  if (val <= 50)  return { className: "aqi-level-good",           label: "良好" };
-  if (val <= 100) return { className: "aqi-level-moderate",       label: "普通" };
-  if (val <= 150) return { className: "aqi-level-sensitive",      label: "對敏感族群不健康" };
-  if (val <= 200) return { className: "aqi-level-unhealthy",      label: "對所有族群不健康" };
-  if (val <= 300) return { className: "aqi-level-very-unhealthy", label: "非常不健康" };
-  return { className: "aqi-level-hazardous", label: "危害" };
+  if (val <= 50)  return { className: "aqi-level-good",           label: t("aqiGood") };
+  if (val <= 100) return { className: "aqi-level-moderate",       label: t("aqiModerate") };
+  if (val <= 150) return { className: "aqi-level-sensitive",      label: t("aqiSensitive") };
+  if (val <= 200) return { className: "aqi-level-unhealthy",      label: t("aqiUnhealthy") };
+  if (val <= 300) return { className: "aqi-level-very-unhealthy", label: t("aqiVeryUnhealthy") };
+  return { className: "aqi-level-hazardous", label: t("aqiHazardous") };
 }
 
 function renderAirQuality(aqi, pm25, stationName) {
@@ -581,26 +754,19 @@ function renderAirQuality(aqi, pm25, stationName) {
 }
 
 function findBestStation(records, county, township) {
-  // Normalize: remove trailing "區"/"鄉"/"鎮"/"市"/"村" from township for fuzzy match
   const townBase = township.replace(/[區鄉鎮市村]$/g, "");
-
-  // API returns lowercase field names: sitename, county, aqi, pm2.5, etc.
   const countyRecords = records.filter(r => (r.county || r.County) === county);
   if (countyRecords.length === 0) return null;
 
   const getName = r => r.sitename || r.SiteName || "";
-
-  // 1. Try exact station name match to township base
   const exactMatch = countyRecords.find(r => getName(r) === townBase);
   if (exactMatch) return exactMatch;
 
-  // 2. Try partial match (station name contains township base or vice versa)
   const partialMatch = countyRecords.find(r =>
     getName(r).includes(townBase) || townBase.includes(getName(r))
   );
   if (partialMatch) return partialMatch;
 
-  // 3. Fallback to the first station in the same county
   return countyRecords[0];
 }
 
@@ -614,18 +780,17 @@ function getMockAqiData(county, township) {
   const aqi = Math.round(baseAqi + (rand() * 30 - 10));
   const pm25 = Math.round(aqi * 0.35 + rand() * 5);
   const townBase = township.replace(/[區鄉鎮市村]$/g, "");
-  return { aqi: String(Math.max(0, aqi)), pm25: String(Math.max(0, pm25)), stationName: `${townBase}測站（模擬）` };
+  const simSuffix = t("aqiStationSimSuffix");
+  return { aqi: String(Math.max(0, aqi)), pm25: String(Math.max(0, pm25)), stationName: `${townBase}${simSuffix}` };
 }
 
 async function fetchAirQuality(county, township) {
-  // Demo mode: use mock data
   if (currentSettings.demoMode) {
     const mock = getMockAqiData(county, township);
     renderAirQuality(mock.aqi, mock.pm25, mock.stationName);
     return;
   }
 
-  // No MOENV key: show hint overlay
   const moenvKey = currentSettings.moenvApiKey?.trim();
   if (!moenvKey) {
     aqiNoKeyHint.classList.remove("hidden");
@@ -640,24 +805,23 @@ async function fetchAirQuality(county, township) {
     if (!res.ok) throw new Error(`MOENV API error: ${res.status}`);
 
     const json = await res.json();
-    // API may return a direct array or wrap in { records: [...] }
     const records = Array.isArray(json) ? json : (json.records || []);
     if (records.length === 0) throw new Error("MOENV API returned no records");
 
     const station = findBestStation(records, county, township);
     if (!station) {
-      renderAirQuality("--", "--", "找不到該縣市的測站");
+      renderAirQuality("--", "--", t("aqiStationNotFound"));
       return;
     }
 
     const stationName = station.sitename || station.SiteName || "--";
     const aqiVal = station.aqi || station.AQI || "--";
     const pm25Val = station["pm2.5"] || station["PM2.5"] || "--";
-
-    renderAirQuality(aqiVal, pm25Val, `${stationName}測站`);
+    const stationSuffix = t("aqiStationSuffix");
+    renderAirQuality(aqiVal, pm25Val, `${stationName}${stationSuffix}`);
   } catch (err) {
     console.warn("AQI fetch error:", err.message);
-    renderAirQuality("--", "--", "空氣品質資料讀取失敗");
+    renderAirQuality("--", "--", t("aqiFetchFailed"));
   }
 }
 
@@ -667,13 +831,15 @@ function renderFavoritesBar() {
   savedLocations.forEach((loc, i) => {
     const chip = document.createElement("button");
     chip.className = "fav-chip" + (i === activeLocationIdx ? " active" : "") + (loc.isPrimary ? " primary" : "");
-    chip.title = `${loc.county} ${loc.township}`;
+    chip.title = formatLocationDisplay(loc.county, loc.township, activeUILang);
 
-    // Label: show township name (short), star button for primary, hollow star for non-primary
+    const starTitle   = loc.isPrimary ? t("favStarPrimaryTitle") : t("favStarTitle");
+    const removeTitle = t("favRemoveTitle");
+    const chipLabel   = formatChipLabel(loc.county, loc.township, activeUILang);
     const starHtml = loc.isPrimary 
-      ? `<span class="fav-star primary" title="目前預設">⭐</span>` 
-      : `<span class="fav-star" title="設為預設">☆</span>`;
-    chip.innerHTML = `${starHtml}<span class="fav-label">${loc.township}</span><span class="fav-remove" data-idx="${i}" title="移除">✕</span>`;
+      ? `<span class="fav-star primary" title="${starTitle}">⭐</span>` 
+      : `<span class="fav-star" title="${starTitle}">☆</span>`;
+    chip.innerHTML = `${starHtml}<span class="fav-label">${chipLabel}</span><span class="fav-remove" data-idx="${i}" title="${removeTitle}">✕</span>`;
 
     chip.addEventListener("click", (e) => {
       if (e.target.classList.contains("fav-remove") || e.target.classList.contains("fav-star")) return;
@@ -718,7 +884,6 @@ function setPrimaryLocation(idx) {
 
 function removeLocation(idx) {
   savedLocations.splice(idx, 1);
-  // Ensure one primary exists
   const wasPrimary = !savedLocations.find(l => l.isPrimary);
   if (savedLocations.length > 0 && wasPrimary) {
     savedLocations[0].isPrimary = true;
@@ -732,14 +897,14 @@ function removeLocation(idx) {
         chrome.runtime.sendMessage({ type: "RESET_ALARM" });
       }
     } else {
-      showError("請先新增一個收藏位置。");
+      showError(t("errorNoLocation"));
     }
   });
 }
 
 function addLocation(county, township) {
   if (savedLocations.length >= MAX_FAVORITES) {
-    alert(`最多只能收藏 ${MAX_FAVORITES} 個位置！`);
+    alert(t("favMaxAlert"));
     return;
   }
   const exists = savedLocations.findIndex(l => l.county === county && l.township === township);
@@ -753,7 +918,6 @@ function addLocation(county, township) {
   saveFavorites(() => {
     renderFavoritesBar();
     fetchWeather();
-    // Tell background to refresh alarm for new primary if needed
     if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
       chrome.runtime.sendMessage({ type: "RESET_ALARM" });
     }
@@ -768,7 +932,7 @@ function saveFavorites(cb) {
 function updateLocationLabel() {
   if (savedLocations.length === 0) { locationDisplay.textContent = "--"; return; }
   const loc = savedLocations[activeLocationIdx];
-  if (loc) locationDisplay.textContent = `${loc.county} ${loc.township}`;
+  if (loc) locationDisplay.textContent = formatLocationDisplay(loc.county, loc.township, activeUILang);
 }
 
 // ── Search Panel ──────────────────────────────────────────────────────────────
@@ -783,28 +947,40 @@ function performSearch(query) {
   const q = query.trim();
   if (q.length === 0) { searchResults.classList.add("hidden"); return; }
 
-  const results = [];
-  CITY_COUNTY_DATA.forEach(city => {
-    const countyMatch = city.cityName.includes(q);
-    city.townships.forEach(town => {
-      if (countyMatch || town.includes(q)) {
-        results.push({ county: city.cityName, township: town });
-      }
-    });
-  });
+  // Use unified bilingual search from i18n_data.js
+  const results = (typeof searchGeoData === "function")
+    ? searchGeoData(q)
+    : (() => {
+        // Fallback: Chinese-only search
+        const r = [];
+        CITY_COUNTY_DATA.forEach(city => {
+          const countyMatch = city.cityName.includes(q);
+          city.townships.forEach(town => {
+            if (countyMatch || town.includes(q)) {
+              r.push({ county: city.cityName, township: town });
+            }
+          });
+        });
+        return r;
+      })();
 
   if (results.length === 0) {
-    searchResults.innerHTML = `<div class="search-no-result">找不到「${q}」的相關地點</div>`;
+    const noResultMsg = activeUILang === "en"
+      ? `No results found for "${q}"`
+      : `找不到「${q}」的相關地點`;
+    searchResults.innerHTML = `<div class="search-no-result">${noResultMsg}</div>`;
   } else {
     searchResults.innerHTML = "";
     results.slice(0, 8).forEach(r => {
       const item = document.createElement("div");
       item.className = "search-result-item";
       const alreadySaved = savedLocations.some(l => l.county === r.county && l.township === r.township);
+      const countyDisplay   = activeUILang === "en" ? (typeof getCountyNameEn === "function" ? getCountyNameEn(r.county) : r.county) : r.county;
+      const townshipDisplay = activeUILang === "en" ? (typeof getTownshipNameEn === "function" ? getTownshipNameEn(r.county, r.township) : r.township) : r.township;
       item.innerHTML = `
-        <span class="result-county">${r.county}</span>
-        <span class="result-township">${r.township}</span>
-        ${alreadySaved ? '<span class="result-saved">已收藏</span>' : ''}
+        <span class="result-county">${countyDisplay}</span>
+        <span class="result-township">${townshipDisplay}</span>
+        ${alreadySaved ? `<span class="result-saved">${t("favSaved")}</span>` : ''}
       `;
       item.addEventListener("click", () => {
         addLocation(r.county, r.township);
@@ -817,8 +993,6 @@ function performSearch(query) {
 }
 
 // ── Open-Meteo PoP Supplement ────────────────────────────────────────────────
-// Calls Open-Meteo to get daily precipitation_probability_max (0-100) for 7 days.
-// Returns an array of { date: "YYYY-MM-DD", pop: number } or null on error.
 async function fetchOpenMeteoPoP(lat, lon) {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
@@ -836,10 +1010,9 @@ async function fetchOpenMeteoPoP(lat, lon) {
   }
 }
 
-// Merges Open-Meteo daily PoP into forecast days that are missing maxPop.
 async function supplementMissingPoP(forecast, county, township) {
   const missingIdx = forecast.map((d, i) => i).filter(i => forecast[i].maxPop === null);
-  if (missingIdx.length === 0) return; // all days have CWA PoP, nothing to do
+  if (missingIdx.length === 0) return;
 
   const coords = TOWNSHIP_COORDS[`${county}_${township}`];
   if (!coords) {
@@ -850,23 +1023,19 @@ async function supplementMissingPoP(forecast, county, township) {
   const omData = await fetchOpenMeteoPoP(coords.lat, coords.lon);
   if (!omData) return;
 
-  // Build a date → pop lookup from Open-Meteo result
   const omMap = {};
   omData.forEach(({ date, pop }) => { omMap[date] = pop; });
 
-  // Fill only the days that are still missing
   missingIdx.forEach(i => {
     const day = forecast[i];
     if (day.maxPop === null && omMap[day.date] !== undefined) {
       day.maxPop = omMap[day.date];
-      day.popSource = "open-meteo"; // optional tag for debugging
+      day.popSource = "open-meteo";
     }
   });
 }
 
 // ── Fetch Current Rain Amount from CWA O-A0002-001 ─────────────────────────
-// Finds the nearest automatic rain gauge station to (county, township) and
-// returns the current accumulated precipitation as a display string.
 async function fetchRainAmount(county, township, apiKey) {
   try {
     const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=${apiKey}&format=JSON`;
@@ -877,23 +1046,19 @@ async function fetchRainAmount(county, township, apiKey) {
     const stations = json?.records?.Station;
     if (!Array.isArray(stations) || stations.length === 0) throw new Error("No rain station records");
 
-    // Filter to same county first
     const countyStations = stations.filter(s => (s.GeoInfo?.CountyName || "") === county);
     const pool = countyStations.length > 0 ? countyStations : stations;
 
-    // Helper: Haversine-light squared distance (degrees, good enough for matching)
     const coordsKey = `${county}_${township}`;
     const targetCoords = TOWNSHIP_COORDS[coordsKey];
 
     let bestStation = null;
 
     if (targetCoords) {
-      // Find closest station by squared Euclidean distance in lat/lon
       let minDist = Infinity;
       pool.forEach(s => {
         const coordArr = s.GeoInfo?.Coordinates;
         if (!coordArr) return;
-        // Pick WGS84 coordinate entry
         const wgs = Array.isArray(coordArr)
           ? coordArr.find(c => (c.CoordinateName || "").includes("WGS84")) || coordArr[0]
           : coordArr;
@@ -904,17 +1069,15 @@ async function fetchRainAmount(county, township, apiKey) {
         if (dist < minDist) { minDist = dist; bestStation = s; }
       });
     } else {
-      // No coordinates: try name matching, else take first in county
       const townBase = township.replace(/[區鄉鎮市村]$/g, "");
       bestStation = pool.find(s => (s.GeoInfo?.TownName || "").includes(townBase)) || pool[0];
     }
 
     if (!bestStation) return null;
 
-    // Helper: parse a raw rainfall value from CWA API
     function parseRaw(raw) {
       if (raw === undefined || raw === null || raw === -99 || raw === "-99" || raw === "X" || raw === "x") return "0.0";
-      if (raw === -98 || raw === "-98") return "0.0"; // No rain for 6+ hours
+      if (raw === -98 || raw === "-98") return "0.0";
       if (raw === "T" || raw === "t") return "微量";
       const val = parseFloat(raw);
       if (isNaN(val) || val < 0) return "0.0";
@@ -930,13 +1093,13 @@ async function fetchRainAmount(county, township, apiKey) {
     };
   } catch (err) {
     console.warn("[Popup] fetchRainAmount failed:", err.message);
-    return null; // null → renders as "-- mm" (graceful fallback)
+    return null;
   }
 }
 
 // ── Fetch Weather (cache-first) ───────────────────────────────────────────────
 async function fetchWeather(force = false) {
-  if (savedLocations.length === 0) { showError("請先新增一個收藏位置。"); return; }
+  if (savedLocations.length === 0) { showError(t("errorNoLocation")); return; }
 
   const loc = savedLocations[activeLocationIdx];
   if (!loc) return;
@@ -948,8 +1111,8 @@ async function fetchWeather(force = false) {
   if (currentSettings.demoMode) {
     demoModeBanner.classList.remove("hidden");
     setTimeout(() => {
-      try { renderWeather(getMockWeatherData(loc.county, loc.township), false, "剛剛更新"); }
-      catch (e) { showError("模擬資料生成失敗。"); }
+      try { renderWeather(getMockWeatherData(loc.county, loc.township), false, t("cacheJustUpdated")); }
+      catch (e) { showError(t("errorFetchFailed")); }
     }, 350);
     return;
   }
@@ -957,7 +1120,7 @@ async function fetchWeather(force = false) {
   demoModeBanner.classList.add("hidden");
 
   if (!currentSettings.apiKey?.trim()) {
-    showError("未輸入 CWA API 授權碼，請在設定中填寫，或開啟「示範模式」。");
+    showError(t("errorApiKey"));
     return;
   }
 
@@ -979,31 +1142,29 @@ async function fetchWeather(force = false) {
     const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${cityInfo.datasetId}?Authorization=${currentSettings.apiKey}&locationName=${encodeURIComponent(loc.township)}`;
     const res = await fetch(url);
     if (!res.ok) {
-      if (res.status === 401) throw new Error("無效的 API 授權碼，請重新檢查設定。");
-      throw new Error(`連線錯誤，狀態碼: ${res.status}`);
+      if (res.status === 401) throw new Error(t("errorInvalidApiKey"));
+      throw new Error(`${activeUILang === "en" ? "Connection error, status:" : "連線錯誤，狀態碼:"} ${res.status}`);
     }
 
     const json = await res.json();
-    if (json.success !== "true" || !json.records) throw new Error("氣象署 API 回傳失敗。");
+    if (json.success !== "true" || !json.records) throw new Error(t("errorApiFailed"));
 
     const parsedData = parseCWAWeatherData(json, loc.township);
-    // Supplement missing PoP for days 4-7 from Open-Meteo, and fetch rain amount in parallel
     const [_, rainAmount] = await Promise.all([
       supplementMissingPoP(parsedData.forecast, loc.county, loc.township),
       fetchRainAmount(loc.county, loc.township, currentSettings.apiKey)
     ]);
     parsedData.current.rainAmount = rainAmount;
     await writeToCache(loc.county, loc.township, parsedData);
-    renderWeather(parsedData, false, "剛剛更新");
+    renderWeather(parsedData, false, t("cacheJustUpdated"));
   } catch (err) {
     console.error("CWA API Error:", err);
-    // If cache exists but stale, still show it with a warning
     const cacheEntry = await readFromCache(loc.county, loc.township);
     if (cacheEntry?.data) {
       const age = getCacheAge(cacheEntry);
-      renderWeather(cacheEntry.data, true, `⚠ 快取(${age})`);
+      renderWeather(cacheEntry.data, true, `⚠ ${activeUILang === "en" ? "Cache" : "快取"}(${age})`);
     } else {
-      showError(err.message || "天氣資料抓取失敗。請確認 API 授權碼是否正確，或開啟示範模式。");
+      showError(err.message || t("errorFetchFailed"));
     }
   }
 }
@@ -1020,24 +1181,36 @@ function saveSettings() {
   const moenvKey   = moenvApiKeyInput.value.trim();
   const demo       = demoModeSwitch.checked;
   const ttl        = parseInt(cacheTtlSelect.value) || 60;
+  const newLang    = langSelect.value;
+
+  const langChanged = newLang !== currentSettings.lang;
 
   currentSettings.apiKey           = key;
   currentSettings.moenvApiKey      = moenvKey;
   currentSettings.demoMode         = demo;
   currentSettings.cacheTtlMinutes  = ttl;
+  currentSettings.lang             = newLang;
 
   storage.set({ [SETTINGS_KEY]: currentSettings }, () => {
-    const orig = settingsSaveBtn.textContent;
-    settingsSaveBtn.textContent = "已儲存！✨";
+    // If language changed, re-resolve and re-apply UI
+    if (langChanged) {
+      activeUILang = resolveUILang(currentSettings);
+      applyI18nDOM();
+    }
+
+    const origText = settingsSaveBtn.textContent;
+    settingsSaveBtn.textContent = t("settingsSaved");
     settingsSaveBtn.style.backgroundColor = "var(--accent-secondary)";
     setTimeout(() => {
-      settingsSaveBtn.textContent = orig;
+      settingsSaveBtn.textContent = t("settingsSave");
       settingsSaveBtn.style.backgroundColor = "";
       settingsOverlay.classList.add("hidden");
-      // Reset alarm interval in background
       if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
         chrome.runtime.sendMessage({ type: "RESET_ALARM" });
       }
+      // Re-render with new language
+      renderFavoritesBar();
+      updateLocationLabel();
       fetchWeather();
     }, 800);
   });
@@ -1066,12 +1239,13 @@ function bindEvents() {
     }
   });
 
-  // Settings
+  // Settings open
   settingsToggleBtn.addEventListener("click", () => {
     apiKeyInput.value  = currentSettings.apiKey;
     moenvApiKeyInput.value = currentSettings.moenvApiKey || "";
     demoModeSwitch.checked = currentSettings.demoMode;
     cacheTtlSelect.value = String(currentSettings.cacheTtlMinutes || 60);
+    langSelect.value = currentSettings.lang || "auto";
     settingsOverlay.classList.remove("hidden");
   });
   settingsCloseBtn.addEventListener("click", () => settingsOverlay.classList.add("hidden"));
@@ -1082,14 +1256,14 @@ function bindEvents() {
   toggleKeyVisibility.addEventListener("click", () => {
     const isPass = apiKeyInput.type === "password";
     apiKeyInput.type = isPass ? "text" : "password";
-    toggleKeyVisibility.textContent = isPass ? "隱藏" : "顯示";
+    toggleKeyVisibility.textContent = isPass ? t("apiKeyHide") : t("apiKeyShow");
   });
 
   // MOENV API key visibility
   toggleMoenvKeyVis.addEventListener("click", () => {
     const isPass = moenvApiKeyInput.type === "password";
     moenvApiKeyInput.type = isPass ? "text" : "password";
-    toggleMoenvKeyVis.textContent = isPass ? "隱藏" : "顯示";
+    toggleMoenvKeyVis.textContent = isPass ? t("apiKeyHide") : t("apiKeyShow");
   });
 
   // AQI no-key hint: open settings
@@ -1098,6 +1272,7 @@ function bindEvents() {
     moenvApiKeyInput.value = currentSettings.moenvApiKey || "";
     demoModeSwitch.checked = currentSettings.demoMode;
     cacheTtlSelect.value = String(currentSettings.cacheTtlMinutes || 60);
+    langSelect.value = currentSettings.lang || "auto";
     settingsOverlay.classList.remove("hidden");
   });
 
@@ -1129,6 +1304,10 @@ function init() {
 
       const primaryIdx = savedLocations.findIndex(l => l.isPrimary);
       activeLocationIdx = primaryIdx !== -1 ? primaryIdx : 0;
+
+      // Resolve language first, then apply i18n to DOM
+      activeUILang = resolveUILang(currentSettings);
+      applyI18nDOM();
 
       applyTheme(currentSettings.theme || "cute-light-theme");
       renderFavoritesBar();

@@ -1,0 +1,290 @@
+{
+  "extName": {
+    "message": "Cute Taiwan Weather"
+  },
+  "extDesc": {
+    "message": "Show current weather, temperature, feels-like temperature, humidity, precipitation, and 7-day forecast for townships across Taiwan. Cute hand-drawn theme."
+  },
+  "settingsTitle": {
+    "message": "Settings"
+  },
+  "settingsAriaLabel": {
+    "message": "Settings"
+  },
+  "settingsPageTitle": {
+    "message": "Settings"
+  },
+  "settingsClose": {
+    "message": "Close"
+  },
+  "settingsSave": {
+    "message": "Save Settings"
+  },
+  "settingsSaved": {
+    "message": "Saved! ✨"
+  },
+  "searchPlaceholder": {
+    "message": "Search city or township…"
+  },
+  "loadingText": {
+    "message": "Loading weather data..."
+  },
+  "loadingDefault": {
+    "message": "Loading"
+  },
+  "errorRetry": {
+    "message": "Retry"
+  },
+  "errorDefault": {
+    "message": "Oops! Connection failed."
+  },
+  "errorReadFailed": {
+    "message": "Failed to load. Please check your connection or API key."
+  },
+  "errorNoLocation": {
+    "message": "Please add a saved location first."
+  },
+  "errorApiKey": {
+    "message": "CWA API key not set. Please add it in Settings, or enable Demo Mode."
+  },
+  "errorInvalidApiKey": {
+    "message": "Invalid API key. Please check your settings."
+  },
+  "errorConnFailed": {
+    "message": "Connection error, status: $STATUS$",
+    "placeholders": {
+      "status": { "content": "$1" }
+    }
+  },
+  "errorApiFailed": {
+    "message": "CWA API returned an error."
+  },
+  "errorFetchFailed": {
+    "message": "Failed to fetch weather data. Please verify your API key or enable Demo Mode."
+  },
+  "cacheJustUpdated": {
+    "message": "Just updated"
+  },
+  "cacheMinutesAgo": {
+    "message": "$MINS$ min ago",
+    "placeholders": {
+      "mins": { "content": "$1" }
+    }
+  },
+  "cacheHoursAgo": {
+    "message": "$HOURS$ hr ago",
+    "placeholders": {
+      "hours": { "content": "$1" }
+    }
+  },
+  "cacheStalePrefix": {
+    "message": "⚠ Cache("
+  },
+  "cacheStaleSuffix": {
+    "message": ")"
+  },
+  "refreshAria": {
+    "message": "Force refresh"
+  },
+  "refreshTitle": {
+    "message": "Force refresh"
+  },
+  "cacheAgeBadgeDefault": {
+    "message": "Cached"
+  },
+  "labelApparentTemp": {
+    "message": "Feels Like"
+  },
+  "labelHumidity": {
+    "message": "Humidity"
+  },
+  "labelRainProb": {
+    "message": "Rain Prob."
+  },
+  "labelDailyRain": {
+    "message": "Daily Total"
+  },
+  "labelHourlyRain": {
+    "message": "Hourly Rain"
+  },
+  "labelWindScale": {
+    "message": "Wind Scale"
+  },
+  "labelWindScaleUnit": {
+    "message": ""
+  },
+  "labelWindDir": {
+    "message": "Wind Direction"
+  },
+  "forecastTitle": {
+    "message": "7-Day Forecast"
+  },
+  "forecastToday": {
+    "message": "Today"
+  },
+  "forecastTomorrow": {
+    "message": "Tomorrow"
+  },
+  "forecastSun": {
+    "message": "Sun"
+  },
+  "forecastMon": {
+    "message": "Mon"
+  },
+  "forecastTue": {
+    "message": "Tue"
+  },
+  "forecastWed": {
+    "message": "Wed"
+  },
+  "forecastThu": {
+    "message": "Thu"
+  },
+  "forecastFri": {
+    "message": "Fri"
+  },
+  "forecastSat": {
+    "message": "Sat"
+  },
+  "demoBanner": {
+    "message": "Demo Mode is active. Enter your API Key in Settings to get live weather."
+  },
+  "apiKeyLabel": {
+    "message": "CWA API Authorization Key"
+  },
+  "apiKeyApply": {
+    "message": "Apply for key"
+  },
+  "apiKeyPlaceholder": {
+    "message": "Paste your CWA-XXXXXX key here"
+  },
+  "apiKeyShow": {
+    "message": "Show"
+  },
+  "apiKeyHide": {
+    "message": "Hide"
+  },
+  "moenvApiKeyLabel": {
+    "message": "MOENV API Key (Air Quality)"
+  },
+  "moenvApiKeyApply": {
+    "message": "Apply for key"
+  },
+  "moenvApiKeyPlaceholder": {
+    "message": "Paste your MOENV API Key here"
+  },
+  "cacheTtlLabel": {
+    "message": "Update Frequency"
+  },
+  "cacheTtl1h": {
+    "message": "Every 1 hour"
+  },
+  "cacheTtl3h": {
+    "message": "Every 3 hours"
+  },
+  "cacheTtl6h": {
+    "message": "Every 6 hours"
+  },
+  "cacheTtl12h": {
+    "message": "Every 12 hours"
+  },
+  "demoModeLabel": {
+    "message": "Demo Mode (use simulated data)"
+  },
+  "themeLabel": {
+    "message": "Color Theme"
+  },
+  "themeLightBtn": {
+    "message": "Cute Pink (Light)"
+  },
+  "themeDarkBtn": {
+    "message": "Cool Grey-Blue (Dark)"
+  },
+  "languageLabel": {
+    "message": "Language"
+  },
+  "langAuto": {
+    "message": "Auto-detect"
+  },
+  "langZhTW": {
+    "message": "繁體中文"
+  },
+  "langEn": {
+    "message": "English"
+  },
+  "favStarPrimaryTitle": {
+    "message": "Current default"
+  },
+  "favStarTitle": {
+    "message": "Set as default"
+  },
+  "favRemoveTitle": {
+    "message": "Remove"
+  },
+  "favMaxAlert": {
+    "message": "You can only save up to 5 locations!"
+  },
+  "favSaved": {
+    "message": "Saved"
+  },
+  "searchNoResult": {
+    "message": "No results found for \"$Q$\"",
+    "placeholders": {
+      "q": { "content": "$1" }
+    }
+  },
+  "aqiNoKeyHint": {
+    "message": "🌿 Click to set MOENV API key for air quality data"
+  },
+  "aqiStationNotFound": {
+    "message": "No station found for this area"
+  },
+  "aqiStationSuffix": {
+    "message": " Station"
+  },
+  "aqiStationSimSuffix": {
+    "message": " Station (Demo)"
+  },
+  "aqiFetchFailed": {
+    "message": "Failed to load air quality data"
+  },
+  "aqiGood": {
+    "message": "Good"
+  },
+  "aqiModerate": {
+    "message": "Moderate"
+  },
+  "aqiSensitive": {
+    "message": "Unhealthy for Sensitive Groups"
+  },
+  "aqiUnhealthy": {
+    "message": "Unhealthy"
+  },
+  "aqiVeryUnhealthy": {
+    "message": "Very Unhealthy"
+  },
+  "aqiHazardous": {
+    "message": "Hazardous"
+  },
+  "wxSunny": {
+    "message": "Sunny"
+  },
+  "wxCloudy": {
+    "message": "Cloudy"
+  },
+  "wxOvercast": {
+    "message": "Overcast"
+  },
+  "wxRainy": {
+    "message": "Rainy"
+  },
+  "wxThunderstorm": {
+    "message": "Thunderstorm"
+  },
+  "wxSnowy": {
+    "message": "Snowy"
+  },
+  "wxWindy": {
+    "message": "Windy"
+  }
+}

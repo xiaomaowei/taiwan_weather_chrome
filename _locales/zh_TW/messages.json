@@ -1,0 +1,290 @@
+{
+  "extName": {
+    "message": "可愛手繪台灣天氣"
+  },
+  "extDesc": {
+    "message": "顯示台灣各鄉鎮當前天氣、溫度、體感溫度、相對濕度、降雨量（降雨機率），以及一週天氣預報。可愛手繪風格主題。"
+  },
+  "settingsTitle": {
+    "message": "設定"
+  },
+  "settingsAriaLabel": {
+    "message": "設定"
+  },
+  "settingsPageTitle": {
+    "message": "設定頁面"
+  },
+  "settingsClose": {
+    "message": "關閉"
+  },
+  "settingsSave": {
+    "message": "儲存設定"
+  },
+  "settingsSaved": {
+    "message": "已儲存！✨"
+  },
+  "searchPlaceholder": {
+    "message": "搜尋縣市或鄉鎮…"
+  },
+  "loadingText": {
+    "message": "正在讀取天氣資料..."
+  },
+  "loadingDefault": {
+    "message": "載入中"
+  },
+  "errorRetry": {
+    "message": "重新嘗試"
+  },
+  "errorDefault": {
+    "message": "糟糕！連線失敗了。"
+  },
+  "errorReadFailed": {
+    "message": "讀取失敗，請檢查連線或 API Key。"
+  },
+  "errorNoLocation": {
+    "message": "請先新增一個收藏位置。"
+  },
+  "errorApiKey": {
+    "message": "未輸入 CWA API 授權碼，請在設定中填寫，或開啟「示範模式」。"
+  },
+  "errorInvalidApiKey": {
+    "message": "無效的 API 授權碼，請重新檢查設定。"
+  },
+  "errorConnFailed": {
+    "message": "連線錯誤，狀態碼: $STATUS$",
+    "placeholders": {
+      "status": { "content": "$1" }
+    }
+  },
+  "errorApiFailed": {
+    "message": "氣象署 API 回傳失敗。"
+  },
+  "errorFetchFailed": {
+    "message": "天氣資料抓取失敗。請確認 API 授權碼是否正確，或開啟示範模式。"
+  },
+  "cacheJustUpdated": {
+    "message": "剛剛更新"
+  },
+  "cacheMinutesAgo": {
+    "message": "$MINS$ 分鐘前",
+    "placeholders": {
+      "mins": { "content": "$1" }
+    }
+  },
+  "cacheHoursAgo": {
+    "message": "$HOURS$ 小時前",
+    "placeholders": {
+      "hours": { "content": "$1" }
+    }
+  },
+  "cacheStalePrefix": {
+    "message": "⚠ 快取("
+  },
+  "cacheStaleSuffix": {
+    "message": ")"
+  },
+  "refreshAria": {
+    "message": "強制更新"
+  },
+  "refreshTitle": {
+    "message": "強制更新"
+  },
+  "cacheAgeBadgeDefault": {
+    "message": "快取中"
+  },
+  "labelApparentTemp": {
+    "message": "體感溫度"
+  },
+  "labelHumidity": {
+    "message": "相對濕度"
+  },
+  "labelRainProb": {
+    "message": "降雨機率"
+  },
+  "labelDailyRain": {
+    "message": "今日累積"
+  },
+  "labelHourlyRain": {
+    "message": "時雨量"
+  },
+  "labelWindScale": {
+    "message": "風力級別"
+  },
+  "labelWindScaleUnit": {
+    "message": "級"
+  },
+  "labelWindDir": {
+    "message": "風向"
+  },
+  "forecastTitle": {
+    "message": "一週天氣預報"
+  },
+  "forecastToday": {
+    "message": "今天"
+  },
+  "forecastTomorrow": {
+    "message": "明天"
+  },
+  "forecastSun": {
+    "message": "週日"
+  },
+  "forecastMon": {
+    "message": "週一"
+  },
+  "forecastTue": {
+    "message": "週二"
+  },
+  "forecastWed": {
+    "message": "週三"
+  },
+  "forecastThu": {
+    "message": "週四"
+  },
+  "forecastFri": {
+    "message": "週五"
+  },
+  "forecastSat": {
+    "message": "週六"
+  },
+  "demoBanner": {
+    "message": "目前處於「示範模式」，請至設定輸入 API Key 以獲取即時天氣。"
+  },
+  "apiKeyLabel": {
+    "message": "中央氣象署 API 授權碼"
+  },
+  "apiKeyApply": {
+    "message": "申請授權碼"
+  },
+  "apiKeyPlaceholder": {
+    "message": "請貼上 CWA-XXXXXX 授權碼"
+  },
+  "apiKeyShow": {
+    "message": "顯示"
+  },
+  "apiKeyHide": {
+    "message": "隱藏"
+  },
+  "moenvApiKeyLabel": {
+    "message": "環境部 API 授權碼（空氣品質）"
+  },
+  "moenvApiKeyApply": {
+    "message": "申請授權碼"
+  },
+  "moenvApiKeyPlaceholder": {
+    "message": "請貼上環境部 API Key"
+  },
+  "cacheTtlLabel": {
+    "message": "資料更新頻率"
+  },
+  "cacheTtl1h": {
+    "message": "每 1 小時更新"
+  },
+  "cacheTtl3h": {
+    "message": "每 3 小時更新"
+  },
+  "cacheTtl6h": {
+    "message": "每 6 小時更新"
+  },
+  "cacheTtl12h": {
+    "message": "每 12 小時更新"
+  },
+  "demoModeLabel": {
+    "message": "示範模式 (使用模擬資料)"
+  },
+  "themeLabel": {
+    "message": "選擇主題配色"
+  },
+  "themeLightBtn": {
+    "message": "可愛粉白 (Light)"
+  },
+  "themeDarkBtn": {
+    "message": "舒適灰藍 (Dark)"
+  },
+  "languageLabel": {
+    "message": "語言"
+  },
+  "langAuto": {
+    "message": "自動偵測"
+  },
+  "langZhTW": {
+    "message": "繁體中文"
+  },
+  "langEn": {
+    "message": "English"
+  },
+  "favStarPrimaryTitle": {
+    "message": "目前預設"
+  },
+  "favStarTitle": {
+    "message": "設為預設"
+  },
+  "favRemoveTitle": {
+    "message": "移除"
+  },
+  "favMaxAlert": {
+    "message": "最多只能收藏 5 個位置！"
+  },
+  "favSaved": {
+    "message": "已收藏"
+  },
+  "searchNoResult": {
+    "message": "找不到「$Q$」的相關地點",
+    "placeholders": {
+      "q": { "content": "$1" }
+    }
+  },
+  "aqiNoKeyHint": {
+    "message": "🌿 點此設定環境部 API 金鑰以顯示空氣品質"
+  },
+  "aqiStationNotFound": {
+    "message": "找不到該縣市的測站"
+  },
+  "aqiStationSuffix": {
+    "message": "測站"
+  },
+  "aqiStationSimSuffix": {
+    "message": "測站（模擬）"
+  },
+  "aqiFetchFailed": {
+    "message": "空氣品質資料讀取失敗"
+  },
+  "aqiGood": {
+    "message": "良好"
+  },
+  "aqiModerate": {
+    "message": "普通"
+  },
+  "aqiSensitive": {
+    "message": "對敏感族群不健康"
+  },
+  "aqiUnhealthy": {
+    "message": "對所有族群不健康"
+  },
+  "aqiVeryUnhealthy": {
+    "message": "非常不健康"
+  },
+  "aqiHazardous": {
+    "message": "危害"
+  },
+  "wxSunny": {
+    "message": "晴天"
+  },
+  "wxCloudy": {
+    "message": "多雲"
+  },
+  "wxOvercast": {
+    "message": "陰天"
+  },
+  "wxRainy": {
+    "message": "有雨"
+  },
+  "wxThunderstorm": {
+    "message": "雷陣雨"
+  },
+  "wxSnowy": {
+    "message": "有雪"
+  },
+  "wxWindy": {
+    "message": "有風"
+  }
+}

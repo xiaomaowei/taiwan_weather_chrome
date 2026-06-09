@@ -20,7 +20,7 @@
         <!-- dynamically injected chips -->
       </div>
       <!-- Settings Button -->
-      <button id="settings-toggle-btn" class="icon-btn" title="設定" aria-label="設定">
+      <button id="settings-toggle-btn" class="icon-btn" data-i18n-title="settingsTitle" data-i18n-aria-label="settingsAriaLabel" title="設定" aria-label="設定">
         <svg class="gear-icon" viewBox="0 0 24 24" width="24" height="24">
           <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.47,5.34 14.86,5.08L14.47,2.42C14.43,2.18 14.22,2 13.97,2H9.97C9.72,2 9.51,2.18 9.47,2.42L9.08,5.08C8.47,5.34 7.9,5.66 7.38,6.05L4.89,5.05C4.67,4.96 4.4,5.05 4.28,5.27L2.28,8.73C2.16,8.95 2.21,9.22 2.4,9.37L4.51,11C4.47,11.34 4.45,11.67 4.45,12C4.45,12.33 4.47,12.65 4.51,12.97L2.4,14.63C2.21,14.78 2.16,15.05 2.28,15.27L4.28,18.73C4.4,18.95 4.67,19.04 4.89,18.95L7.38,17.95C7.9,18.34 8.47,18.66 9.08,18.92L9.47,21.58C9.51,21.82 9.72,22 9.97,22H13.97C14.22,22 14.43,21.82 14.47,21.58L14.86,18.92C15.47,18.66 16.04,18.34 16.56,17.95L19.05,18.95C19.27,19.04 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
         </svg>
@@ -31,7 +31,7 @@
     <div id="location-search-panel" class="location-search-panel">
       <div class="search-input-row">
         <span class="search-icon-label">🔍</span>
-        <input type="text" id="location-search-input" class="search-input" placeholder="搜尋縣市或鄉鎮…" autocomplete="off" />
+        <input type="text" id="location-search-input" class="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="搜尋縣市或鄉鎮…" autocomplete="off" />
       </div>
       <div id="search-results" class="search-results hidden">
         <!-- dynamically populated result items -->
@@ -46,7 +46,7 @@
           <span></span><span></span><span></span>
         </div>
       </div>
-      <p class="loading-text">正在讀取天氣資料...</p>
+      <p class="loading-text" data-i18n="loadingText">正在讀取天氣資料...</p>
     </div>
 
     <!-- State View: Error Panel -->
@@ -63,8 +63,8 @@
           <path stroke="#5A6D90" stroke-width="2" stroke-linecap="round" fill="none" d="M45 57q3-3 6 0" />
         </svg>
       </div>
-      <p id="error-message" class="error-text">糟糕！連線失敗了。</p>
-      <button id="error-retry-btn" class="cute-btn primary">重新嘗試</button>
+      <p id="error-message" class="error-text" data-i18n="errorDefault">糟糕！連線失敗了。</p>
+      <button id="error-retry-btn" class="cute-btn primary" data-i18n="errorRetry">重新嘗試</button>
     </div>
 
     <!-- Main Content Panel -->
@@ -75,7 +75,7 @@
         <span id="location-display">--</span>
         <div id="cache-age-container" class="cache-age-container hidden">
           <span id="cache-age-badge" class="cache-age-badge">快取中</span>
-          <button id="refresh-btn" class="refresh-badge-btn" title="強制更新" aria-label="強制更新">
+          <button id="refresh-btn" class="refresh-badge-btn" data-i18n-title="refreshTitle" data-i18n-aria-label="refreshAria" title="強制更新" aria-label="強制更新">
             <svg viewBox="0 0 24 24" width="10" height="10">
               <path fill="currentColor" d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" />
             </svg>
@@ -91,34 +91,34 @@
           </div>
           <div class="current-temp-container">
             <h1 id="current-temp">--°</h1>
-            <div id="current-wx" class="weather-condition-text">載入中</div>
+            <div id="current-wx" class="weather-condition-text" data-i18n="loadingDefault">載入中</div>
           </div>
         </div>
 
         <!-- Weather details list -->
         <div class="weather-details-grid">
           <div class="detail-item">
-            <span class="detail-label">體感溫度</span>
+            <span class="detail-label" data-i18n="labelApparentTemp">體感溫度</span>
             <span id="detail-apparent-temp" class="detail-value">--°C</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">相對濕度</span>
+            <span class="detail-label" data-i18n="labelHumidity">相對濕度</span>
             <span id="detail-humidity" class="detail-value">--%</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">降雨機率</span>
+            <span class="detail-label" data-i18n="labelRainProb">降雨機率</span>
             <span id="detail-rain-prob" class="detail-value">--%</span>
           </div>
           <div id="detail-rain-item" class="detail-item">
-            <span id="detail-rain-label" class="detail-label">今日累積</span>
+            <span id="detail-rain-label" class="detail-label" data-i18n="labelDailyRain">今日累積</span>
             <span id="detail-rain-amount" class="detail-value">-- mm</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">風力級別</span>
-            <span id="detail-wind-scale" class="detail-value">-- 級</span>
+            <span class="detail-label" data-i18n="labelWindScale">風力級別</span>
+            <span id="detail-wind-scale" class="detail-value">--</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">風向</span>
+            <span class="detail-label" data-i18n="labelWindDir">風向</span>
             <span id="detail-wind-dir" class="detail-value">--</span>
           </div>
         </div>
@@ -150,13 +150,13 @@
           </div>
         </div>
         <div id="aqi-no-key-hint" class="aqi-no-key-hint hidden">
-          <span>🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
+          <span data-i18n="aqiNoKeyHint">🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
         </div>
       </section>
 
       <!-- 7-Day Forecast Section -->
       <section class="forecast-section">
-        <h2 class="section-title">一週天氣預報</h2>
+        <h2 class="section-title" data-i18n="forecastTitle">一週天氣預報</h2>
         <div id="forecast-list" class="forecast-list">
           <!-- 7 Day forecast items will be dynamically injected here -->
         </div>
@@ -164,7 +164,7 @@
 
       <!-- Demo Mode Banner -->
       <div id="demo-mode-banner" class="demo-banner hidden">
-        <span>目前處於「示範模式」，請至設定輸入 API Key 以獲取即時天氣。</span>
+        <span data-i18n="demoBanner">目前處於「示範模式」，請至設定輸入 API Key 以獲取即時天氣。</span>
       </div>
 
     </main>
@@ -173,8 +173,8 @@
     <div id="settings-overlay" class="settings-overlay hidden">
       <div class="settings-card">
         <div class="settings-header">
-          <h2>設定頁面</h2>
-          <button id="settings-close-btn" class="icon-btn-close" title="關閉" aria-label="關閉">
+          <h2 data-i18n="settingsPageTitle">設定頁面</h2>
+          <button id="settings-close-btn" class="icon-btn-close" data-i18n-title="settingsClose" data-i18n-aria-label="settingsClose" title="關閉" aria-label="關閉">
             <svg viewBox="0 0 24 24" width="20" height="20">
               <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
             </svg>
@@ -185,41 +185,41 @@
           <!-- API Token Input -->
           <div class="form-group">
             <label for="api-key-input" class="form-label">
-              中央氣象署 API 授權碼
-              <a href="https://opendata.cwa.gov.tw/user/login" target="_blank" class="help-link">申請授權碼</a>
+              <span data-i18n="apiKeyLabel">中央氣象署 API 授權碼</span>
+              <a href="https://opendata.cwa.gov.tw/user/login" target="_blank" class="help-link" data-i18n="apiKeyApply">申請授權碼</a>
             </label>
             <div class="password-input-wrapper">
-              <input type="password" id="api-key-input" class="cute-input" placeholder="請貼上 CWA-XXXXXX 授權碼">
-              <button id="toggle-key-visibility" class="visibility-btn" type="button" aria-label="切換可見性">顯示</button>
+              <input type="password" id="api-key-input" class="cute-input" data-i18n-placeholder="apiKeyPlaceholder" placeholder="請貼上 CWA-XXXXXX 授權碼">
+              <button id="toggle-key-visibility" class="visibility-btn" type="button" data-i18n-aria-label="apiKeyShow" aria-label="切換可見性" data-i18n="apiKeyShow">顯示</button>
             </div>
           </div>
 
           <!-- MOENV API Token Input -->
           <div class="form-group">
             <label for="moenv-api-key-input" class="form-label">
-              環境部 API 授權碼（空氣品質）
-              <a href="https://data.moenv.gov.tw/api-term" target="_blank" class="help-link">申請授權碼</a>
+              <span data-i18n="moenvApiKeyLabel">環境部 API 授權碼（空氣品質）</span>
+              <a href="https://data.moenv.gov.tw/api-term" target="_blank" class="help-link" data-i18n="moenvApiKeyApply">申請授權碼</a>
             </label>
             <div class="password-input-wrapper">
-              <input type="password" id="moenv-api-key-input" class="cute-input" placeholder="請貼上環境部 API Key">
-              <button id="toggle-moenv-key-visibility" class="visibility-btn" type="button" aria-label="切換可見性">顯示</button>
+              <input type="password" id="moenv-api-key-input" class="cute-input" data-i18n-placeholder="moenvApiKeyPlaceholder" placeholder="請貼上環境部 API Key">
+              <button id="toggle-moenv-key-visibility" class="visibility-btn" type="button" data-i18n-aria-label="apiKeyShow" aria-label="切換可見性" data-i18n="apiKeyShow">顯示</button>
             </div>
           </div>
 
           <!-- Cache TTL Selector -->
           <div class="form-group">
-            <label for="cache-ttl-select" class="form-label">資料更新頻率</label>
+            <label for="cache-ttl-select" class="form-label" data-i18n="cacheTtlLabel">資料更新頻率</label>
             <select id="cache-ttl-select" class="cute-select" style="width:100%; padding: 8px 12px;">
-              <option value="60">每 1 小時更新</option>
-              <option value="180">每 3 小時更新</option>
-              <option value="360">每 6 小時更新</option>
-              <option value="720">每 12 小時更新</option>
+              <option value="60"  data-i18n="cacheTtl1h">每 1 小時更新</option>
+              <option value="180" data-i18n="cacheTtl3h">每 3 小時更新</option>
+              <option value="360" data-i18n="cacheTtl6h">每 6 小時更新</option>
+              <option value="720" data-i18n="cacheTtl12h">每 12 小時更新</option>
             </select>
           </div>
 
           <!-- Demo Mode Toggle -->
           <div class="form-group row-group">
-            <span class="form-label">示範模式 (使用模擬資料)</span>
+            <span class="form-label" data-i18n="demoModeLabel">示範模式 (使用模擬資料)</span>
             <label class="cute-switch" for="demo-mode-switch">
               <input type="checkbox" id="demo-mode-switch">
               <span class="slider"></span>
@@ -228,16 +228,26 @@
 
           <!-- Theme Selector -->
           <div class="form-group">
-            <span class="form-label">選擇主題配色</span>
+            <span class="form-label" data-i18n="themeLabel">選擇主題配色</span>
             <div class="theme-buttons">
-              <button id="theme-btn-light" class="theme-select-btn active">可愛粉白 (Light)</button>
-              <button id="theme-btn-dark" class="theme-select-btn">舒適灰藍 (Dark)</button>
+              <button id="theme-btn-light" class="theme-select-btn active" data-i18n="themeLightBtn">可愛粉白 (Light)</button>
+              <button id="theme-btn-dark" class="theme-select-btn" data-i18n="themeDarkBtn">舒適灰藍 (Dark)</button>
             </div>
+          </div>
+
+          <!-- Language Selector -->
+          <div class="form-group">
+            <label for="lang-select" class="form-label" data-i18n="languageLabel">語言</label>
+            <select id="lang-select" class="cute-select" style="width:100%; padding: 8px 12px;">
+              <option value="auto" data-i18n="langAuto">自動偵測</option>
+              <option value="zh_TW" data-i18n="langZhTW">繁體中文</option>
+              <option value="en" data-i18n="langEn">English</option>
+            </select>
           </div>
         </div>
 
         <div class="settings-footer">
-          <button id="settings-save-btn" class="cute-btn primary">儲存設定</button>
+          <button id="settings-save-btn" class="cute-btn primary" data-i18n="settingsSave">儲存設定</button>
         </div>
       </div>
     </div>
@@ -245,6 +255,7 @@
   </div>
 
   <script src="city_county_data.js"></script>
+  <script src="i18n_data.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

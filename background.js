@@ -149,19 +149,20 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   const minTTimes = getTimes(elMap["最低溫度"]);
   const popTimes  = getTimes(elMap["12小時降雨機率"]);
   const forecastMap = {};
-  const daysOfWeek = ["週日","週一","週二","週三","週四","週五","週六"];
+  const todayDate = new Date().toISOString().split("T")[0];
 
   wxTimes.forEach((t, idx) => {
     const startStr = t.StartTime || t.startTime || "";
     const dateKey  = startStr.includes("T") ? startStr.split("T")[0] : startStr.split(" ")[0];
     if (!dateKey) return;
     const dateObj = new Date(dateKey + "T00:00:00");
-    const dayName = daysOfWeek[dateObj.getDay()];
+    const dayOfWeek = dateObj.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
     const hourPart = startStr.includes("T") ? parseInt(startStr.split("T")[1].slice(0,2)) : 0;
     const isDay = hourPart >= 6 && hourPart < 18;
 
     if (!forecastMap[dateKey]) {
-      forecastMap[dateKey] = { date: dateKey, dayName, minT: 999, maxT: -999, maxPop: null, dayWx: "", nightWx: "", wx: "" };
+      // Store dayOfWeek (number) instead of Chinese string — popup.js localizes at render time
+      forecastMap[dateKey] = { date: dateKey, dayOfWeek, minT: 999, maxT: -999, maxPop: null, dayWx: "", nightWx: "", wx: "" };
     }
     const wxVal = getVal(t, "Weather") || "";
     if (isDay) forecastMap[dateKey].dayWx = wxVal; else forecastMap[dateKey].nightWx = wxVal;
@@ -184,9 +185,12 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   const forecast = Object.values(forecastMap)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 7)
-    .map((day, i) => {
-      day.wx          = day.dayWx || day.nightWx || "多雲";
-      day.displayName = i === 0 ? "今天" : i === 1 ? "明天" : day.dayName;
+    .map((day) => {
+      day.wx = day.dayWx || day.nightWx || "多雲";
+      // dayIndex: computed from date diff — popup.js uses this for localized day label
+      const dayDiff = Math.round((new Date(day.date + "T00:00:00") - new Date(todayDate + "T00:00:00")) / 86400000);
+      day.dayIndex = dayDiff;
+      // Do NOT store displayName here — popup.js localizes based on dayIndex + dayOfWeek
       if (day.minT === 999)  day.minT = 20;
       if (day.maxT === -999) day.maxT = 28;
       return day;
