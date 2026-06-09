@@ -4,7 +4,7 @@
 
 這是一款專為台灣設計的 Chrome 瀏覽器天氣擴充功能。採用**溫馨可愛的手繪插畫風格**，並支援細緻到**鄉鎮區級別**的即時天氣與一週預報，讓你在瀏覽網頁之餘，也能隨時掌握全台各地的天氣變化！
 
-<img width="360" height="570" alt="image" src="https://github.com/user-attachments/assets/bddf08da-3fee-470b-94f7-12181c2ba389" />
+<img width="360" height="570" alt="image" src="https://github.com/user-attachments/assets/c0ce4cdb-df30-479c-9078-b4008c588da6" />
 
 
 
