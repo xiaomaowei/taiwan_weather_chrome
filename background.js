@@ -54,6 +54,47 @@ async function setCacheEntry(cacheKey, data) {
   });
 }
 
+function calculateApparentTemp(temp, rh, windSpeed) {
+  const t = parseFloat(temp);
+  const h = parseFloat(rh);
+  const ws = parseFloat(windSpeed);
+  if (isNaN(t) || isNaN(h) || isNaN(ws)) return null;
+  const e = (h / 100) * 6.105 * Math.exp((17.27 * t) / (237.7 + t));
+  const at = t + 0.33 * e - 0.7 * ws - 4.0;
+  return Math.round(at);
+}
+
+function windSpeedToBeaufort(ws) {
+  const v = parseFloat(ws);
+  if (isNaN(v)) return "--";
+  if (v <= 0.2) return 0;
+  if (v <= 1.5) return 1;
+  if (v <= 3.3) return 2;
+  if (v <= 5.4) return 3;
+  if (v <= 7.9) return 4;
+  if (v <= 10.7) return 5;
+  if (v <= 13.8) return 6;
+  if (v <= 17.1) return 7;
+  if (v <= 20.7) return 8;
+  if (v <= 24.4) return 9;
+  if (v <= 28.4) return 10;
+  if (v <= 32.6) return 11;
+  return 12;
+}
+
+function windDegreeToCardinal(deg) {
+  const d = parseFloat(deg);
+  if (isNaN(d) || d < 0) return "--";
+  const index = Math.round(d / 22.5) % 16;
+  const directions = [
+    "北風", "偏東北風", "東北風", "偏東北風",
+    "東風", "偏東南風", "東南風", "偏東南風",
+    "南風", "偏西南風", "西南風", "偏西南風",
+    "西風", "偏西北風", "西北風", "偏西北風"
+  ];
+  return directions[index] || "--";
+}
+
 // ── Dataset ID map (county → 7-day forecast dataset ID) ──────────────────────
 // Loaded from city_county_data.js in popup context; here we hardcode the map.
 const COUNTY_DATASET_MAP = {
@@ -137,14 +178,85 @@ async function fetchRainAmountBG(county, township, apiKey) {
   }
 }
 
+async function fetchRealTimeObservationBG(county, township, apiKey) {
+  try {
+    const url = `${CWA_API_BASE}/O-A0003-001?Authorization=${apiKey}&format=JSON`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Observation API error: ${res.status}`);
+    const json = await res.json();
+
+    const stations = json?.records?.Station || json?.records?.location;
+    if (!Array.isArray(stations) || stations.length === 0) throw new Error("No weather station records");
+
+    const countyStations = stations.filter(s => (s.GeoInfo?.CountyName || "") === county);
+    const pool = countyStations.length > 0 ? countyStations : stations;
+
+    const coordsKey = `${county}_${township}`;
+    const coords = (typeof TOWNSHIP_COORDS !== 'undefined') ? TOWNSHIP_COORDS[coordsKey] : null;
+
+    let bestStation = null;
+
+    if (coords) {
+      let minDist = Infinity;
+      pool.forEach(s => {
+        const coordArr = s.GeoInfo?.Coordinates;
+        if (!coordArr) return;
+        const wgs = Array.isArray(coordArr)
+          ? coordArr.find(c => (c.CoordinateName || "").includes("WGS84")) || coordArr[0]
+          : coordArr;
+        const lat = parseFloat(wgs?.StationLatitude);
+        const lon = parseFloat(wgs?.StationLongitude);
+        if (isNaN(lat) || isNaN(lon)) return;
+        const dist = (lat - coords.lat) ** 2 + (lon - coords.lon) ** 2;
+        if (dist < minDist) { minDist = dist; bestStation = s; }
+      });
+    } else {
+      const townBase = township.replace(/[區鄉鎮市村]$/g, "");
+      bestStation = pool.find(s => (s.GeoInfo?.TownName || "").includes(townBase)) || pool[0];
+    }
+
+    if (!bestStation) return null;
+
+    const weatherEl = bestStation.WeatherElement;
+    if (!weatherEl) return null;
+
+    function parseObsVal(val) {
+      if (val === undefined || val === null) return null;
+      const fVal = parseFloat(val);
+      if (isNaN(fVal)) return null;
+      if (fVal === -99 || fVal === -999 || fVal === -9900.0) return null;
+      return fVal;
+    }
+
+    const temp = parseObsVal(weatherEl.AirTemperature);
+    const rh = parseObsVal(weatherEl.RelativeHumidity);
+    const windSpeed = parseObsVal(weatherEl.WindSpeed);
+    const windDirDeg = parseObsVal(weatherEl.WindDirection);
+    const wx = weatherEl.Weather || null;
+
+    return {
+      temp: temp !== null ? String(Math.round(temp)) : null,
+      humidity: rh !== null ? String(Math.round(rh)) : null,
+      windSpeed: windSpeed,
+      windDirection: windDirDeg !== null ? windDegreeToCardinal(windDirDeg) : null,
+      windScale: windSpeed !== null ? String(windSpeedToBeaufort(windSpeed)) : null,
+      wx: (wx && wx !== "-99" && wx !== "-999" && wx !== "X" && wx !== "x") ? wx : null
+    };
+  } catch (err) {
+    console.warn("[BG] fetchRealTimeObservationBG failed:", err.message);
+    return null;
+  }
+}
+
 async function fetchAndCacheWeather(county, township, apiKey) {
   const datasetId = COUNTY_DATASET_MAP[county];
   if (!datasetId) throw new Error(`Unknown county: ${county}`);
 
   const url = `${CWA_API_BASE}/${datasetId}?Authorization=${apiKey}&locationName=${encodeURIComponent(township)}`;
-  const [res, rainAmount] = await Promise.all([
+  const [res, rainAmount, realTimeObs] = await Promise.all([
     fetch(url),
-    fetchRainAmountBG(county, township, apiKey)
+    fetchRainAmountBG(county, township, apiKey),
+    fetchRealTimeObservationBG(county, township, apiKey)
   ]);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
 
@@ -207,6 +319,18 @@ async function fetchAndCacheWeather(county, township, apiKey) {
     wx:            getVal(wxT,    "Weather")                || "多雲",
     rainAmount:    rainAmount
   };
+
+  if (realTimeObs) {
+    if (realTimeObs.temp !== null) current.temp = realTimeObs.temp;
+    if (realTimeObs.humidity !== null) current.humidity = realTimeObs.humidity;
+    if (realTimeObs.windScale !== null) current.windScale = realTimeObs.windScale;
+    if (realTimeObs.windDirection !== null) current.windDirection = realTimeObs.windDirection;
+    if (realTimeObs.wx !== null) current.wx = realTimeObs.wx;
+    if (realTimeObs.temp !== null && realTimeObs.humidity !== null && realTimeObs.windSpeed !== null) {
+      const at = calculateApparentTemp(realTimeObs.temp, realTimeObs.humidity, realTimeObs.windSpeed);
+      if (at !== null) current.apparentTemp = String(at);
+    }
+  }
 
   // Build 7-day forecast
   const wxTimes   = getTimes(elMap["天氣現象"]);
