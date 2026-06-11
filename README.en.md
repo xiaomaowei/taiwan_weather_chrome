@@ -2,7 +2,7 @@
 
 English | [繁體中文](./README.md)
 
-> **Current Version**: v2.3.7
+> **Current Version**: v2.3.8
 
 This is a Chrome browser weather extension tailored for Taiwan. Featuring a **warm and cute hand-drawn illustration style**, it supports real-time weather and weekly forecasts detailed down to the **township/district level**, allowing you to check weather conditions all over Taiwan at any time while browsing the web!
 
@@ -34,6 +34,9 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 * 🎀 **Today's Summary Visual Fine-tuning (v2.3.5 New)**: Removed the background border and color from the summary text block for a cleaner look, and removed the duplicate trailing weather emoji in the i18n text, leaving only the primary front icon.
 * 🌧️ **Weekly Forecast 100% Rain Probability Layout Fine-tuning (v2.3.6 New)**: To prevent three-digit rain probabilities (e.g. 100%) from wrapping and breaking the layout in the narrow weekly cards, we adjusted the font size to 9px and set the icon-to-text gap to 0px, ensuring everything stays neatly on one line.
 * 🗜️ **Popup Bottom Blank Space Reduction (v2.3.7 New)**: Reduced the fixed body height from 595px to 560px to tightly fit the forecast section's bottom edge while keeping a small, comfortable margin, eliminating the redundant blank space left by previous layout optimizations.
+* ⏱️ **Real-time Observation Precision Boost (v2.3.8 New)**: Integrates the CWA weather station real-time observation API (`O-A0003-001`). The extension automatically pairs with the nearest weather station (calculated by coordinates or matched by township) to retrieve the most recent temperature, apparent temperature, humidity, wind scale, wind direction, and weather condition observed within the last 10 minutes, significantly improving accuracy.
+* ⚙️ **Full-screen Settings Panel & Slide-up Animation (v2.3.8 New)**: Reconstructed the settings overlay into a fixed full-screen slide-up settings page. Transition animations are optimized from the scale-in pop-up to a smooth slide-up animation from the bottom. Custom scrollbars with hand-drawn styles are also integrated to handle long configurations cleanly.
+* 🌐 **Background Proxy Fetch for Open-Meteo PoP (v2.3.8 New)**: Redirects Open-Meteo precipitation probability API requests through the background Service Worker. This bypasses Manifest V3 CORS/CSP and host permission restrictions inside the popup context, while keeping the local fetch as a graceful fallback.
 
 ---
 
@@ -108,6 +111,12 @@ To display real-time AQI and PM2.5 data, it is recommended to configure your Min
   * **Hourly Rainfall Alert**: The `RainfallElement.Past1hr.Precipitation` field represents cumulative rainfall in the past 1 hour. If this value is **≥ 30 mm** (heavy rain threshold), the UI automatically switches to display "Hourly Rainfall" and flashes a red breathing alert indicator.
   * **Fault Tolerance**: If the rainfall API fails, the rainfall card will fallback to `-- mm` gracefully.
   * **Special Codes**: `T` (trace amount, too small to measure); `-98` (no rain for 6 consecutive hours, displayed as 0.0 mm); `-99` / `X` (sensor malfunction or missing data, displayed as 0.0 mm).
+
+* ⏱️ **Real-time Weather Observation Details**:
+  * **Data Source**: CWA Weather Station Real-time Observations (`O-A0003-001`), updated approximately every **10 minutes**.
+  * **Station Matching Mechanism**: The extension calculates the straight-line distance between the selected township's center coordinates and available weather stations, choosing the closest active station. If coordinate data is missing, it falls back to a township name fuzzy match.
+  * **Observation Parameters**: Includes temperature, humidity, wind speed, wind direction, and weather condition description. Apparent temperature is calculated dynamically based on the station's real-time temperature, humidity, and wind speed.
+  * **Fault Tolerance & Fallback**: If a specific parameter is missing (e.g. sensor malfunction returning `-99`) or the observation API request fails, the extension gracefully falls back to the forecasted values from CWA's township forecasts (`F-D0047` series), ensuring uninterrupted display.
 
 ---
 
