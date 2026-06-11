@@ -117,6 +117,8 @@ taiwan_weather_chrome/
 ├── _locales/             # Localization files
 │   ├── zh_TW/            # Traditional Chinese (messages.json)
 │   └── en/               # English (messages.json)
+├── icons/                # Extension toolbar icon assets
+├── store_icons/          # Web Store promotional images & logos
 ├── manifest.json         # Extension manifest (V3)
 ├── popup.html            # Extension main window HTML structure
 ├── popup.css             # Hand-drawn styled CSS stylesheet (Light & Dark themes)
@@ -124,8 +126,10 @@ taiwan_weather_chrome/
 ├── background.js         # Service Worker (background update and toolbar icon painter)
 ├── city_county_data.js   # Taiwan city & district coordinate mapping
 ├── i18n_data.js          # Bilingual translation mappings (cities, districts, weather, wind, etc.)
-├── icons/                # Extension toolbar icon assets
-└── README.md             # This document
+├── .gitignore            # Git ignore configuration
+├── LICENSE               # GPL v3 license file
+├── README.md             # Chinese documentation
+└── README.en.md          # English documentation (this file)
 ```
 
 ---

@@ -120,7 +120,8 @@ taiwan_weather_chrome/
 ├── _locales/             # 語系資源包
 │   ├── zh_TW/            # 繁體中文語系 (messages.json)
 │   └── en/               # 英文語系 (messages.json)
-├── fonts/                # 本地字型（Fredoka、Outfit、辰宇落雁體）
+├── icons/                # 擴充功能各尺寸圖示集
+├── store_icons/          # 線上商店促銷圖與 Logo 集
 ├── manifest.json         # 擴充功能定義檔 (V3)
 ├── popup.html            # 擴充功能主視窗結構
 ├── popup.css             # 可愛手繪風格樣式表 (Light & Dark 雙主題)
@@ -128,8 +129,10 @@ taiwan_weather_chrome/
 ├── background.js         # Service Worker，處理背景自動刷新與工具列 icon 繪製
 ├── city_county_data.js   # 台灣縣市與鄉鎮區資料對照表
 ├── i18n_data.js          # 多國語言翻譯對照表 (縣市、鄉鎮、天氣狀態、風向等)
-├── icons/                # 擴充功能各尺寸圖示集
-└── README.md             # 本說明文件
+├── .gitignore            # Git 忽略設定檔
+├── LICENSE               # GPL v3 授權條款
+├── README.md             # 中文說明文件（本檔案）
+└── README.en.md          # 英文說明文件
 ```
 
 ---
