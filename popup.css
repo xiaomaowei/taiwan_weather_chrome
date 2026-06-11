@@ -1,8 +1,9 @@
 /* Cozy Cute Hand-Drawn Design System */
 
 :root {
-  /* Common Fonts */
+  /* Common Fonts — Fredoka/Outfit for Latin/numbers, fallback to system UI for Chinese characters */
   --font-primary: 'Fredoka', 'Outfit', system-ui, -apple-system, sans-serif;
+
   
   /* Light Theme Defaults */
   --bg-color: #fef8f5;
@@ -55,7 +56,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   width: 360px;
-  height: auto;
+  height: 560px;
   overflow: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -66,7 +67,7 @@ body {
   flex-direction: column;
   width: 100%;
   height: auto;
-  padding: 16px;
+  padding: 10px 14px;
   position: relative;
 }
 
@@ -75,7 +76,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 /* Favorites chip bar */
@@ -182,7 +183,7 @@ body {
   border: 2px solid var(--border-color);
   border-radius: var(--wobbly-radius-btn);
   box-shadow: 3px 3px 0px var(--shadow-color);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   overflow: hidden;
   animation: pop-settings 0.2s ease;
 }
@@ -514,7 +515,7 @@ body {
 .weather-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .weather-content.hidden {
@@ -526,7 +527,7 @@ body {
   background-color: var(--card-bg);
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--wobbly-radius-1);
-  padding: 14px;
+  padding: 12px;
   box-shadow: 4px 4px 0px var(--shadow-color);
   display: flex;
   flex-direction: column;
@@ -536,13 +537,20 @@ body {
   transition: background-color 0.3s ease;
 }
 
+.current-weather-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
 .current-weather-main {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  width: 100%;
-  margin-bottom: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .current-temp-container {
@@ -644,7 +652,7 @@ body {
 .section-title {
   font-size: 15px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   color: var(--text-color);
   padding-left: 4px;
 }
@@ -730,7 +738,7 @@ body {
   line-height: 1;
   display: flex;
   align-items: center;
-  gap: 1px;
+  gap: 0px;
 }
 
 
@@ -1237,4 +1245,352 @@ input:checked + .slider:before {
 
 .aqi-no-key-hint.hidden {
   display: none !important;
+}
+
+/* ── Today's Summary / Weather Alert Banner ──────────────────── */
+.today-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  max-width: 155px;
+  box-sizing: border-box;
+  animation: fade-in-summary 0.4s ease;
+}
+
+.today-summary-bar.hidden {
+  display: none !important;
+}
+
+.today-summary-bar.alert-mode {
+  background-color: var(--banner-bg);
+  border: 2px solid var(--banner-text);
+  color: var(--banner-text);
+  animation: fade-in-summary 0.4s ease, alert-pulse 2s ease-in-out infinite;
+}
+
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25); }
+}
+
+@keyframes fade-in-summary {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.summary-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.summary-text {
+  flex: 1;
+}
+
+/* ── AQI Expandable Detail Panel ─────────────────────────────── */
+.air-quality-card {
+  cursor: pointer;
+  user-select: none;
+}
+
+.aqi-expand-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  padding-top: 2px;
+  border-top: 1px dashed var(--border-color);
+  opacity: 0.8;
+}
+
+.aqi-expand-arrow {
+  font-size: 16px;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+
+.air-quality-card.expanded .aqi-expand-arrow {
+  transform: rotate(180deg);
+}
+
+.aqi-detail-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease,
+              padding 0.25s ease;
+  padding-top: 0;
+}
+
+.aqi-detail-panel.open {
+  max-height: 120px;
+  opacity: 1;
+  padding-top: 8px;
+}
+
+.aqi-detail-panel.hidden {
+  display: none !important;
+}
+
+.aqi-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 8px;
+  border-top: 2px dashed var(--border-color);
+  padding-top: 8px;
+}
+
+.aqi-detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.aqi-detail-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.aqi-detail-value {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-color);
+}
+
+.aqi-detail-value.health-advice {
+  font-size: 10px;
+  color: var(--accent-color);
+  text-align: center;
+}
+
+/* ── Forecast Enhancements ───────────────────────────────────── */
+/* Tomorrow card — slightly more prominent than other future days */
+.forecast-col.tomorrow {
+  background-color: var(--details-bg);
+  border-color: var(--accent-blue);
+  box-shadow: 2px 2px 0px color-mix(in srgb, var(--accent-blue) 60%, transparent);
+}
+
+.forecast-col.tomorrow .forecast-day-label {
+  color: var(--accent-blue);
+}
+
+/* High/low temp — bigger visual hierarchy gap */
+.forecast-temp-max {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.forecast-temp-min {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  opacity: 0.8;
+}
+
+/* PoP color coding */
+.forecast-pop.pop-none {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.forecast-pop.pop-low {
+  color: var(--accent-blue);
+}
+
+.forecast-pop.pop-medium {
+  color: #5DAAFE;
+  font-weight: 800 !important;
+}
+
+.forecast-pop.pop-high {
+  color: var(--banner-text);
+  font-weight: 900 !important;
+}
+
+/* Data source badge on forecast cards */
+.forecast-source-badge {
+  font-size: 7px;
+  font-weight: 800;
+  padding: 1px 3px;
+  border-radius: 3px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+
+.forecast-source-badge.cwa {
+  background-color: var(--accent-secondary);
+  color: var(--text-color);
+}
+
+.forecast-source-badge.om {
+  background-color: var(--accent-blue);
+  color: var(--text-color);
+}
+
+/* ── API Key Test Button & Result ────────────────────────────── */
+.key-test-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.test-key-btn {
+  font-family: var(--font-primary);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--wobbly-radius-btn);
+  cursor: pointer;
+  color: var(--text-color);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0px var(--shadow-color);
+}
+
+.test-key-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--shadow-color);
+  background-color: var(--details-bg);
+}
+
+.test-key-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--shadow-color);
+}
+
+.test-key-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.key-test-result {
+  font-size: 10px;
+  font-weight: 800;
+  transition: color 0.3s ease;
+}
+
+.key-test-result.success {
+  color: #22c55e;
+}
+
+.key-test-result.error {
+  color: var(--banner-text);
+}
+
+.key-test-result.testing {
+  color: var(--text-secondary);
+  animation: pulse-opacity 1s ease-in-out infinite;
+}
+
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── 繁體中文易讀性優化（字級大小調整） ─────────────────────── */
+
+/* 調整字級大小，解決字體過小看不清的問題 */
+html[lang="zh-TW"] .weather-condition-text {
+  font-size: 16px; /* 原 14px */
+}
+html[lang="zh-TW"] .summary-text {
+  font-size: 11px;
+}
+html[lang="zh-TW"] .detail-label {
+  font-size: 13px; /* 原 11px */
+}
+html[lang="zh-TW"] .detail-value {
+  font-size: 13.5px; /* 原 12px */
+}
+html[lang="zh-TW"] .section-title {
+  font-size: 16px; /* 原 15px */
+}
+html[lang="zh-TW"] .forecast-day-label {
+  font-size: 12.5px; /* 原 11px */
+}
+html[lang="zh-TW"] .forecast-temp-max {
+  font-size: 12px; /* 原 11px */
+}
+html[lang="zh-TW"] .forecast-temp-min {
+  font-size: 11px; /* 原 10px */
+}
+html[lang="zh-TW"] .forecast-pop {
+  font-size: 9px;
+}
+html[lang="zh-TW"] .aqi-label {
+  font-size: 13.5px; /* 原 12px */
+}
+html[lang="zh-TW"] .aqi-value {
+  font-size: 13.5px; /* 原 12px */
+}
+html[lang="zh-TW"] .aqi-status-badge {
+  font-size: 12.5px; /* 原 11px */
+}
+html[lang="zh-TW"] .aqi-no-key-hint {
+  font-size: 12.5px; /* 原 11px */
+}
+html[lang="zh-TW"] .aqi-detail-label {
+  font-size: 12px; /* 原 10px */
+}
+html[lang="zh-TW"] .aqi-detail-value {
+  font-size: 12px; /* 原 11px */
+}
+html[lang="zh-TW"] .health-advice {
+  font-size: 11.5px; /* 原 10px */
+}
+html[lang="zh-TW"] .fav-chip {
+  font-size: 13.5px; /* 原 12px */
+}
+html[lang="zh-TW"] .fav-star {
+  font-size: 13px; /* 原 12px */
+}
+html[lang="zh-TW"] .fav-remove {
+  font-size: 12px; /* 原 11px */
+}
+html[lang="zh-TW"] .settings-header h2 {
+  font-size: 17.5px; /* 原 16px */
+}
+html[lang="zh-TW"] .settings-card label {
+  font-size: 14.5px; /* 原 13px */
+}
+html[lang="zh-TW"] .cute-select {
+  font-size: 14.5px; /* 原 13px */
+}
+html[lang="zh-TW"] .test-key-btn {
+  font-size: 11.5px; /* 原 10px */
+}
+html[lang="zh-TW"] .key-test-result {
+  font-size: 11.5px; /* 原 10px */
+}
+html[lang="zh-TW"] .search-input {
+  font-size: 14.5px; /* 原 13px */
+}
+html[lang="zh-TW"] .search-result-item {
+  font-size: 14.5px; /* 原 13px */
+}
+html[lang="zh-TW"] .loading-text,
+html[lang="zh-TW"] .error-text {
+  font-size: 15px; /* 原 13px 或 14px */
+}
+html[lang="zh-TW"] .demo-banner {
+  font-size: 12px; /* 原 11px */
 }

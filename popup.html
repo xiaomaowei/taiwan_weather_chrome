@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>可愛手繪台灣天氣</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fonts loaded via Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
@@ -85,13 +86,21 @@
 
       <!-- Current Weather Display Card -->
       <section class="current-weather-card">
-        <div class="current-weather-main">
-          <div id="current-icon" class="hand-drawn-icon animated-icon">
-            <!-- Animated Cute SVG Weather Icon injected via JS -->
+        <div class="current-weather-top-row">
+          <div class="current-weather-main">
+            <div id="current-icon" class="hand-drawn-icon animated-icon">
+              <!-- Animated Cute SVG Weather Icon injected via JS -->
+            </div>
+            <div class="current-temp-container">
+              <h1 id="current-temp">--°</h1>
+              <div id="current-wx" class="weather-condition-text" data-i18n="loadingDefault">載入中</div>
+            </div>
           </div>
-          <div class="current-temp-container">
-            <h1 id="current-temp">--°</h1>
-            <div id="current-wx" class="weather-condition-text" data-i18n="loadingDefault">載入中</div>
+  
+          <!-- Weather Alert / Today's Summary Banner -->
+          <div id="today-summary-bar" class="today-summary-bar hidden">
+            <span id="today-summary-icon" class="summary-icon">🌤️</span>
+            <span id="today-summary-text" class="summary-text">--</span>
           </div>
         </div>
 
@@ -152,6 +161,21 @@
         <div id="aqi-no-key-hint" class="aqi-no-key-hint hidden">
           <span data-i18n="aqiNoKeyHint">🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
         </div>
+        <!-- AQI Expandable Detail Panel -->
+        <div id="aqi-detail-panel" class="aqi-detail-panel hidden">
+          <div class="aqi-detail-grid">
+            <div class="aqi-detail-item"><span class="aqi-detail-label">PM10</span><span id="aqi-d-pm10" class="aqi-detail-value">--</span></div>
+            <div class="aqi-detail-item"><span class="aqi-detail-label">O₃</span><span id="aqi-d-o3" class="aqi-detail-value">--</span></div>
+            <div class="aqi-detail-item"><span class="aqi-detail-label">NO₂</span><span id="aqi-d-no2" class="aqi-detail-value">--</span></div>
+            <div class="aqi-detail-item"><span class="aqi-detail-label">CO</span><span id="aqi-d-co" class="aqi-detail-value">--</span></div>
+            <div class="aqi-detail-item"><span class="aqi-detail-label">SO₂</span><span id="aqi-d-so2" class="aqi-detail-value">--</span></div>
+            <div class="aqi-detail-item"><span id="aqi-d-health-label" class="aqi-detail-label">健康建議</span><span id="aqi-d-health" class="aqi-detail-value health-advice">--</span></div>
+          </div>
+        </div>
+        <!-- AQI expand toggle indicator -->
+        <div id="aqi-expand-toggle" class="aqi-expand-toggle">
+          <span id="aqi-expand-arrow" class="aqi-expand-arrow">▾</span>
+        </div>
       </section>
 
       <!-- 7-Day Forecast Section -->
@@ -192,6 +216,10 @@
               <input type="password" id="api-key-input" class="cute-input" data-i18n-placeholder="apiKeyPlaceholder" placeholder="請貼上 CWA-XXXXXX 授權碼">
               <button id="toggle-key-visibility" class="visibility-btn" type="button" data-i18n-aria-label="apiKeyShow" aria-label="切換可見性" data-i18n="apiKeyShow">顯示</button>
             </div>
+            <div class="key-test-row">
+              <button id="test-cwa-key-btn" class="test-key-btn" type="button" data-i18n="testKeyBtn">🔌 測試連線</button>
+              <span id="cwa-key-test-result" class="key-test-result"></span>
+            </div>
           </div>
 
           <!-- MOENV API Token Input -->
@@ -203,6 +231,10 @@
             <div class="password-input-wrapper">
               <input type="password" id="moenv-api-key-input" class="cute-input" data-i18n-placeholder="moenvApiKeyPlaceholder" placeholder="請貼上環境部 API Key">
               <button id="toggle-moenv-key-visibility" class="visibility-btn" type="button" data-i18n-aria-label="apiKeyShow" aria-label="切換可見性" data-i18n="apiKeyShow">顯示</button>
+            </div>
+            <div class="key-test-row">
+              <button id="test-moenv-key-btn" class="test-key-btn" type="button" data-i18n="testKeyBtn">🔌 測試連線</button>
+              <span id="moenv-key-test-result" class="key-test-result"></span>
             </div>
           </div>
 

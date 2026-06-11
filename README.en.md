@@ -2,7 +2,7 @@
 
 English | [繁體中文](./README.md)
 
-> **Current Version**: v2.2.0 (i18n Multi-language Supported)
+> **Current Version**: v2.3.7
 
 This is a Chrome browser weather extension tailored for Taiwan. Featuring a **warm and cute hand-drawn illustration style**, it supports real-time weather and weekly forecasts detailed down to the **township/district level**, allowing you to check weather conditions all over Taiwan at any time while browsing the web!
 
@@ -12,17 +12,27 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 
 ## ✨ Key Features
 
-* 🌐 **Multi-language Support (i18n)**: Fully supports **Traditional Chinese (繁體中文)** and **English (英文)**. The extension automatically detects your browser's language, and you can also manually switch it in the settings panel.
-* 🔍 **Bilingual Search & Dynamic Translation**: The search bar supports fuzzy search in Chinese and English Pinyin for counties, cities, and townships in Taiwan (e.g., searching for `beitou` or `北投` works equally well). All meteorological information, such as weather conditions (Wx), wind direction, and Air Quality Index (AQI), is provided with high-quality bilingual translation.
-* 📍 **Fine-grained Location**: Supports all 22 counties/cities and all townships/districts in Taiwan (e.g., Beitou District in Taipei City, Xindian District in New Taipei City).
-* 🌦️ **Real-time Weather Info**: Provides current temperature, apparent temperature, relative humidity, probability of precipitation, wind speed/direction.
-* 🌧️ **Rainfall Alert (Auto-switch between Daily Cumulative / Hourly Rainfall)**: Integrates the Central Weather Administration (CWA) automatic rain gauge API (`O-A0002-001`) to automatically match the closest observation station. It displays the cumulative rainfall for today (from 00:00 to the current time). When the rainfall in the past 1 hour (hourly rainfall) reaches **30 mm or more** (heavy rain threshold), the UI automatically switches to display "Hourly Rainfall" and triggers a **red breathing light alert**, warning you of potential flooding or landslide risks.
-* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Automatically matches the nearest environmental monitoring station to display real-time AQI and PM2.5 concentrations. Cards feature color codes corresponding to official air quality standards (Good: Green, Moderate: Yellow, Unhealthy for Sensitive Groups: Orange, Unhealthy: Red, Very Unhealthy: Purple, Hazardous: Maroon) with a cute waving leaf micro-animation.
-* 📅 **Weekly Forecast**: An intuitive 7-day forecast including the day of the week, weather condition illustrations, temperature range, and 7-day precipitation probability (the first 3 days are sourced from CWA, and the remaining 4 days are fetched from the Open-Meteo API based on township coordinates, preventing blank forecasts due to CWA API limitations).
-* 🎨 **Healing Hand-drawn Design**: Meticulously designed light and dark themes featuring cute hand-drawn borders and subtle micro-animations for a warm, fluid user experience.
-* 🏷️ **Quick Area Switch**: A search box with fuzzy matching allows fast filtering and saving of frequently visited townships to avoid repetitive searches.
-* 🌡️ **Real-time Temperature Icon**: No need to click! The extension icon on the browser toolbar directly displays the current temperature of your primary location, changing background colors based on temperature (Cold: Blue, Warm: Yellow, Hot: Orange, etc.).
-* ⚡ **Caching & Performance Optimization**: Built-in Service Worker background caching (customizable TTL) prevents redundant CWA API requests, saving daily bandwidth.
+* 🌐 **Multi-language Support (i18n)**: Fully supports **Traditional Chinese (繁體中文)** and **English (英文)**. Auto-detects browser language, with manual override in settings.
+* 🔍 **Bilingual Search & Dynamic Translation**: Fuzzy search by Chinese or Pinyin for any township. All weather data (Wx, wind, AQI, etc.) is provided with high-quality bilingual translation.
+* 📍 **Fine-grained Location**: All 22 counties/cities and every township/district in Taiwan.
+* 🌦️ **Real-time Weather**: Temperature, apparent temperature, humidity, precipitation probability, wind speed/direction.
+* 🌧️ **Rainfall Alert (Daily Cumulative / Hourly auto-switch)**: Integrates CWA rain gauge API (`O-A0002-001`). Triggers a **red breathing light alert** when hourly rainfall reaches 30 mm or more.
+* 🔔 **Official Weather Alerts (v2.3 New)**: Fetches live CWA weather warning API (`W-C0033-001`). Supports heavy rain, strong wind, cold snap, heat, typhoon, and more. Displayed as a prominent alert banner on the main screen.
+* 📊 **Intelligent Daily Summary (v2.3 New)**: Auto-generates a one-line summary based on temperature, precipitation probability, rainfall amount, AQI, and weather alerts (e.g., “Rain expected later — bring an umbrella ☂️” or “Good air quality — great for outdoor activities 🌿”).
+* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Auto-matches the nearest monitoring station. Click the AQI card to **expand detailed pollutant data** (v2.3 New): PM10, O₃, NO₂, CO, SO₂, plus personalized health advice based on the current AQI level.
+* 📅 **Weekly Forecast (v2.3 Visual Upgrade)**: 7-day forecast with enhanced readability. Tomorrow’s card is highlighted; precipitation probability is color-coded by intensity (blue for low, red for high); each card shows a data-source badge (`CWA` yellow / `OM` blue).
+* 🎨 **Healing Hand-drawn Design**: Curated light and dark themes with cute hand-drawn borders and subtle micro-animations.
+* 🔌 **API Key Quick Test (v2.3 New)**: A “Test Connection” button in Settings lets you instantly validate a CWA or MOENV API key without saving and reloading.
+* 🏷️ **Quick Area Switch**: Fuzzy search + one-click saving of frequently visited townships.
+* 🌡️ **Real-time Temperature Icon**: Extension toolbar icon shows the live temperature of your primary location with auto-changing background colors.
+* ⚡ **Caching & Performance**: Built-in Service Worker background caching (customizable TTL) minimizes redundant API calls.
+* ✒️ **Google Fonts & Size Optimization (v2.3.2 Update)**: Reverted back to Google Fonts online links for Fredoka and Outfit fonts and removed over 38MB of local font files, dramatically reducing extension package size.
+* ✍️ **Chinese Legibility & Layout Optimization (v2.3.2 Update)**: Fell back to clean, high-legibility system fonts (like Microsoft JhengHei, PingFang SC) for Chinese characters, and enlarged Chinese text sizes by 1-2px, solving the thin and blurry font issues. The "Today's Summary" has been moved inside the main weather card (below the current condition and above the details grid) for a cleaner layout.
+* 📏 **Popup Height & Layout Optimization (v2.3.3 New)**: Set a fixed popup height of 595px to instruct Chrome to display the window fully, and tightened padding and margins around elements (saving 38px of vertical space) to completely eliminate vertical scrollbars.
+* 📐 **Side-by-Side Summary & Enlarged UI Icons (v2.3.4 New)**: Relocated the "Today's Summary" to be side-by-side on the top right of the card, aligned with the left-aligned weather icon and temperature, saving a full row of vertical height. Additionally, enlarged the AQI expand arrow to 16px and boosted its contrast, facilitating user interaction.
+* 🎀 **Today's Summary Visual Fine-tuning (v2.3.5 New)**: Removed the background border and color from the summary text block for a cleaner look, and removed the duplicate trailing weather emoji in the i18n text, leaving only the primary front icon.
+* 🌧️ **Weekly Forecast 100% Rain Probability Layout Fine-tuning (v2.3.6 New)**: To prevent three-digit rain probabilities (e.g. 100%) from wrapping and breaking the layout in the narrow weekly cards, we adjusted the font size to 9px and set the icon-to-text gap to 0px, ensuring everything stays neatly on one line.
+* 🗜️ **Popup Bottom Blank Space Reduction (v2.3.7 New)**: Reduced the fixed body height from 595px to 560px to tightly fit the forecast section's bottom edge while keeping a small, comfortable margin, eliminating the redundant blank space left by previous layout optimizations.
 
 ---
 

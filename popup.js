@@ -64,6 +64,23 @@ const I18N_STRINGS = {
     aqiStationSimSuffix: "測站（模擬）", aqiFetchFailed: "空氣品質資料讀取失敗",
     aqiGood: "良好", aqiModerate: "普通", aqiSensitive: "對敏感族群不健康",
     aqiUnhealthy: "對所有族群不健康", aqiVeryUnhealthy: "非常不健康", aqiHazardous: "危害",
+    testKeyBtn: "🔌 測試連線", testKeyTesting: "⏳ 測試中…",
+    testKeyOk: "✔ 可用", testKeyFail: "✘ 失敗",
+    testKeyEmpty: "請先輸入 Key",
+    aqiDetailHealthLabel: "健康建議",
+    aqiHealthGood: "空氣清新，適合戶外活動 🌿",
+    aqiHealthModerate: "一般敏感者可正常活動",
+    aqiHealthSensitive: "敏感族群應減少戶外活動",
+    aqiHealthUnhealthy: "請避免長時間戶外活動 😷",
+    aqiHealthVeryUnhealthy: "外出請配戴口罩 🚨",
+    aqiHealthHazardous: "盡量留在室內，避免外出 ⛔",
+    summaryRainHeavy: "近 1 小時雨勢偏強，留意積水",
+    summaryRainToday: "午後有雨，出門記得帶傘",
+    summaryGoodAqi: "空品良好，適合戶外活動",
+    summaryHot: "天氣炎熱，注意防曬補水",
+    summaryCool: "天氣清涼，出門可添件衣",
+    summaryNormal: "天氣舒適，祝您有美好的一天",
+    summaryAlertPrefix: "⚠️ 氣象警特報：",
   },
   en: {
     settingsTitle: "Settings", settingsAriaLabel: "Settings", settingsPageTitle: "Settings",
@@ -103,6 +120,23 @@ const I18N_STRINGS = {
     aqiStationSimSuffix: " Station (Demo)", aqiFetchFailed: "Failed to load air quality data",
     aqiGood: "Good", aqiModerate: "Moderate", aqiSensitive: "Unhealthy for Sensitive Groups",
     aqiUnhealthy: "Unhealthy", aqiVeryUnhealthy: "Very Unhealthy", aqiHazardous: "Hazardous",
+    testKeyBtn: "🔌 Test", testKeyTesting: "⏳ Testing…",
+    testKeyOk: "✔ OK", testKeyFail: "✘ Failed",
+    testKeyEmpty: "Please enter a key first",
+    aqiDetailHealthLabel: "Health Advice",
+    aqiHealthGood: "Great for outdoor activities 🌿",
+    aqiHealthModerate: "Normal activity is fine",
+    aqiHealthSensitive: "Sensitive groups: reduce outdoor time",
+    aqiHealthUnhealthy: "Avoid prolonged outdoor exposure 😷",
+    aqiHealthVeryUnhealthy: "Wear a mask outdoors 🚨",
+    aqiHealthHazardous: "Stay indoors, avoid going out ⛔",
+    summaryRainHeavy: "Heavy rain in the past hour — watch for flooding",
+    summaryRainToday: "Rain expected later — bring an umbrella",
+    summaryGoodAqi: "Good air quality — great for outdoor activities",
+    summaryHot: "Hot day — stay hydrated and use sun protection",
+    summaryCool: "Cool weather — bring a light jacket",
+    summaryNormal: "Comfortable weather — enjoy your day",
+    summaryAlertPrefix: "⚠️ Weather Alert: ",
   }
 };
 
@@ -210,6 +244,24 @@ const toggleMoenvKeyVis  = document.getElementById("toggle-moenv-key-visibility"
 const locationSearchPanel = document.getElementById("location-search-panel");
 const locationSearchInput = document.getElementById("location-search-input");
 const searchResults       = document.getElementById("search-results");
+
+// New v2.3 DOM references
+const todaySummaryBar    = document.getElementById("today-summary-bar");
+const todaySummaryIcon   = document.getElementById("today-summary-icon");
+const todaySummaryText   = document.getElementById("today-summary-text");
+const aqiDetailPanel     = document.getElementById("aqi-detail-panel");
+const aqiExpandArrow     = document.getElementById("aqi-expand-arrow");
+const aqiDPm10           = document.getElementById("aqi-d-pm10");
+const aqiDO3             = document.getElementById("aqi-d-o3");
+const aqiDNo2            = document.getElementById("aqi-d-no2");
+const aqiDCo             = document.getElementById("aqi-d-co");
+const aqiDSo2            = document.getElementById("aqi-d-so2");
+const aqiDHealth         = document.getElementById("aqi-d-health");
+const aqiDHealthLabel    = document.getElementById("aqi-d-health-label");
+const testCwaKeyBtn      = document.getElementById("test-cwa-key-btn");
+const cwaKeyTestResult   = document.getElementById("cwa-key-test-result");
+const testMoenvKeyBtn    = document.getElementById("test-moenv-key-btn");
+const moenvKeyTestResult = document.getElementById("moenv-key-test-result");
 
 // ── Storage Helpers ────────────────────────────────────────────────────────────
 const storage = {
@@ -350,6 +402,100 @@ function getMockWeatherData(county, township) {
 }
 
 // ── Weather Icons ─────────────────────────────────────────────────────────────
+// ── Today's Summary Generator ─────────────────────────────────────────────────
+function generateTodaySummary(current, aqiVal, weatherAlerts) {
+  // If there are official weather alerts, show them first (alert mode)
+  if (weatherAlerts && weatherAlerts.length > 0) {
+    const alertNames = weatherAlerts.slice(0, 2).join('、');
+    return {
+      icon: '⚠️',
+      text: t('summaryAlertPrefix') + alertNames,
+      isAlert: true
+    };
+  }
+  // Heavy hourly rain
+  const rain = current.rainAmount;
+  if (rain && typeof rain === 'object') {
+    const past1hr = parseFloat(rain.past1hr);
+    if (!isNaN(past1hr) && past1hr >= 30) {
+      return { icon: '🌧️', text: t('summaryRainHeavy'), isAlert: true };
+    }
+  }
+  // High rain probability
+  const rainProb = parseInt(current.rainProb) || 0;
+  if (rainProb >= 50) {
+    return { icon: '☂️', text: t('summaryRainToday'), isAlert: false };
+  }
+  // Good AQI
+  const aqi = parseInt(aqiVal) || 999;
+  if (aqi <= 50 && rainProb < 30) {
+    return { icon: '🌿', text: t('summaryGoodAqi'), isAlert: false };
+  }
+  // Temperature extremes
+  const temp = parseInt(current.temp) || 25;
+  if (temp >= 33) {
+    return { icon: '☀️', text: t('summaryHot'), isAlert: false };
+  }
+  if (temp <= 15) {
+    return { icon: '🧥', text: t('summaryCool'), isAlert: false };
+  }
+  // Default comfortable
+  return { icon: '🌤️', text: t('summaryNormal'), isAlert: false };
+}
+
+function renderTodaySummary(current, aqiVal, weatherAlerts) {
+  const summary = generateTodaySummary(current, aqiVal, weatherAlerts);
+  todaySummaryIcon.textContent = summary.icon;
+  todaySummaryText.textContent = summary.text;
+  todaySummaryBar.classList.remove('hidden', 'alert-mode');
+  if (summary.isAlert) {
+    todaySummaryBar.classList.add('alert-mode');
+  }
+}
+
+// ── Weather Alert Fetch (CWA W-C0033-001) ────────────────────────────────────
+async function fetchWeatherAlerts(county, apiKey) {
+  try {
+    const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0033-001?Authorization=${apiKey}&locationName=${encodeURIComponent(county)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const json = await res.json();
+    if (json.success !== 'true') return [];
+
+    const locations = json?.records?.location || [];
+    const alerts = [];
+
+    locations.forEach(loc => {
+      const elements = loc.weatherElement || [];
+      elements.forEach(el => {
+        const times = el.time || [];
+        times.forEach(t => {
+          const param = t.parameter;
+          const phenomenon = param?.parameterName || param?.ParameterName || '';
+          const significance = param?.parameterValue || param?.ParameterValue || '';
+          if (phenomenon && phenomenon !== '無' && phenomenon !== '') {
+            const alertStr = significance ? `${phenomenon}${significance}` : phenomenon;
+            if (!alerts.includes(alertStr)) alerts.push(alertStr);
+          }
+        });
+      });
+    });
+    return alerts;
+  } catch (err) {
+    console.warn('[Popup] fetchWeatherAlerts failed:', err.message);
+    return [];
+  }
+}
+
+function getMockWeatherAlerts(county) {
+  // Demo: randomly show typhoon alert for some counties
+  const rand = getSeedRandom(county + new Date().toDateString());
+  if (rand() < 0.25) {
+    return ['大雨特報', '陸上強風特報'];
+  }
+  return [];
+}
+
 function getWeatherIconKey(wxText) {
   if (!wxText) return "cloudy";
   if (wxText.includes("晴") && !wxText.includes("雨") && !wxText.includes("雲")) return "sunny";
@@ -697,10 +843,17 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   forecastListEl.innerHTML = "";
   forecast.forEach((day, idx) => {
     const col = document.createElement("div");
-    col.className = "forecast-col" + (idx === 0 ? " today" : "");
+    const isTomorrow = day.dayIndex === 1;
+    col.className = "forecast-col" + (idx === 0 ? " today" : "") + (isTomorrow ? " tomorrow" : "");
     const hasPop = day.rainProb !== undefined ? true : (day.maxPop !== null && day.maxPop !== undefined);
     const popVal = day.rainProb !== undefined ? day.rainProb : day.maxPop;
+    const popNum = parseInt(popVal) || 0;
     const rainProbStr = hasPop ? `💧${popVal}%` : `💧--`;
+    // PoP CSS class for color coding
+    const popClass = !hasPop ? 'pop-none' : popNum >= 70 ? 'pop-high' : popNum >= 40 ? 'pop-medium' : popNum >= 20 ? 'pop-low' : 'pop-none';
+    // Data source badge (CWA for first 3, OM for the rest)
+    const sourceLabel = idx < 3 ? 'CWA' : 'OM';
+    const sourceTip = idx < 3 ? '中央氣象署 (CWA)' : 'Open-Meteo';
     // Translate forecast Wx
     const dayWxDisplay = (typeof translateWx === "function")
       ? translateWx(day.wx, activeUILang)
@@ -712,7 +865,8 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
       <span class="forecast-col-icon">${getSVGIconHtml(day.wx)}</span>
       <span class="forecast-temp-max">${day.maxT}°</span>
       <span class="forecast-temp-min">${day.minT}°</span>
-      <span class="forecast-pop">${rainProbStr}</span>
+      <span class="forecast-pop ${popClass}" title="${hasPop ? popVal + '% 降雨機率' : '無資料'}">${rainProbStr}</span>
+      <span class="forecast-source-badge ${sourceLabel.toLowerCase()}" title="${sourceTip}">${sourceLabel}</span>
     `;
     forecastListEl.appendChild(col);
   });
@@ -724,8 +878,21 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
     chrome.runtime.sendMessage({ type: "UPDATE_ICON", temp: current.temp, wx: current.wx });
   }
 
-  // Fetch air quality data alongside weather
+  // Fetch air quality data alongside weather, then generate summary
   const loc = savedLocations[activeLocationIdx];
+
+  // Demo mode: render mock AQI + summary inline
+  if (currentSettings.demoMode) {
+    const mock = getMockAqiData(loc.county, loc.township);
+    const mockExtra = { pm10: '25', o3: '32', no2: '12', co: '0.4', so2: '3' };
+    renderAirQuality(mock.aqi, mock.pm25, mock.stationName, mockExtra);
+    const mockAlerts = getMockWeatherAlerts(loc.county);
+    renderTodaySummary({ temp: current.temp, rainProb: current.rainProb, rainAmount: current.rainAmount },
+      mock.aqi, mockAlerts);
+    return;
+  }
+
+  // Non-demo: fetchAirQuality handles AQI + summary + alerts
   if (loc) fetchAirQuality(loc.county, loc.township);
 }
 
@@ -741,7 +908,7 @@ function getAqiLevel(aqi) {
   return { className: "aqi-level-hazardous", label: t("aqiHazardous") };
 }
 
-function renderAirQuality(aqi, pm25, stationName) {
+function renderAirQuality(aqi, pm25, stationName, extraData) {
   aqiNoKeyHint.classList.add("hidden");
 
   aqiValueEl.textContent = aqi || "--";
@@ -751,6 +918,27 @@ function renderAirQuality(aqi, pm25, stationName) {
   const level = getAqiLevel(aqi);
   aqiStatusBadge.className = "aqi-status-badge " + level.className;
   aqiStatusBadge.textContent = level.label;
+
+  // Populate detail panel if extra data is provided
+  if (extraData && aqiDetailPanel) {
+    aqiDetailPanel.classList.remove('hidden');
+    aqiDPm10.textContent = extraData.pm10 ? `${extraData.pm10} μg/m³` : '--';
+    aqiDO3.textContent   = extraData.o3   ? `${extraData.o3} ppb`    : '--';
+    aqiDNo2.textContent  = extraData.no2  ? `${extraData.no2} ppb`   : '--';
+    aqiDCo.textContent   = extraData.co   ? `${extraData.co} ppm`    : '--';
+    aqiDSo2.textContent  = extraData.so2  ? `${extraData.so2} ppb`   : '--';
+    // Health advice based on AQI level
+    const healthKey = {
+      'aqi-level-good':          'aqiHealthGood',
+      'aqi-level-moderate':      'aqiHealthModerate',
+      'aqi-level-sensitive':     'aqiHealthSensitive',
+      'aqi-level-unhealthy':     'aqiHealthUnhealthy',
+      'aqi-level-very-unhealthy':'aqiHealthVeryUnhealthy',
+      'aqi-level-hazardous':     'aqiHealthHazardous',
+    }[level.className];
+    aqiDHealth.textContent = healthKey ? t(healthKey) : '--';
+    if (aqiDHealthLabel) aqiDHealthLabel.textContent = t('aqiDetailHealthLabel');
+  }
 }
 
 function findBestStation(records, county, township) {
@@ -785,11 +973,8 @@ function getMockAqiData(county, township) {
 }
 
 async function fetchAirQuality(county, township) {
-  if (currentSettings.demoMode) {
-    const mock = getMockAqiData(county, township);
-    renderAirQuality(mock.aqi, mock.pm25, mock.stationName);
-    return;
-  }
+  // Demo mode is handled inline in renderWeather()
+  if (currentSettings.demoMode) return;
 
   const moenvKey = currentSettings.moenvApiKey?.trim();
   if (!moenvKey) {
@@ -818,7 +1003,28 @@ async function fetchAirQuality(county, township) {
     const aqiVal = station.aqi || station.AQI || "--";
     const pm25Val = station["pm2.5"] || station["PM2.5"] || "--";
     const stationSuffix = t("aqiStationSuffix");
-    renderAirQuality(aqiVal, pm25Val, `${stationName}${stationSuffix}`);
+    // Extra pollutant data
+    const extraData = {
+      pm10: station.pm10 || station.PM10 || null,
+      o3:   station.o3   || station.O3   || null,
+      no2:  station.no2  || station.NO2  || null,
+      co:   station.co   || station.CO   || null,
+      so2:  station.so2  || station.SO2  || null,
+    };
+    renderAirQuality(aqiVal, pm25Val, `${stationName}${stationSuffix}`, extraData);
+
+    // Update today summary now we have real AQI
+    const tempStr = currentTempEl.textContent.replace('°','');
+    const rainPStr = rainProbEl.textContent.replace('%','');
+    const past1hrTxt = rainAmountEl.textContent.replace(' mm','');
+    const currentSnap = { temp: tempStr, rainProb: rainPStr, rainAmount: { past1hr: past1hrTxt, now: '0' } };
+    if (currentSettings.apiKey?.trim()) {
+      fetchWeatherAlerts(county, currentSettings.apiKey).then(alerts => {
+        renderTodaySummary(currentSnap, aqiVal, alerts);
+      }).catch(() => renderTodaySummary(currentSnap, aqiVal, []));
+    } else {
+      renderTodaySummary(currentSnap, aqiVal, []);
+    }
   } catch (err) {
     console.warn("AQI fetch error:", err.message);
     renderAirQuality("--", "--", t("aqiFetchFailed"));
@@ -1265,6 +1471,68 @@ function bindEvents() {
     moenvApiKeyInput.type = isPass ? "text" : "password";
     toggleMoenvKeyVis.textContent = isPass ? t("apiKeyHide") : t("apiKeyShow");
   });
+
+  // ── API Key Test Buttons ────────────────────────────────────────
+  async function testApiKey(type, inputEl, resultEl, btn) {
+    const key = inputEl.value.trim();
+    if (!key) { resultEl.className='key-test-result error'; resultEl.textContent = t('testKeyEmpty'); return; }
+    btn.disabled = true;
+    resultEl.className = 'key-test-result testing';
+    resultEl.textContent = t('testKeyTesting');
+    try {
+      let url;
+      if (type === 'cwa') {
+        // Minimal test: fetch one row of any weather forecast
+        url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${key}&limit=1`;
+      } else {
+        url = `https://data.moenv.gov.tw/api/v2/aqx_p_432?format=json&api_key=${key}&limit=1`;
+      }
+      const res = await fetch(url);
+      if (res.status === 401 || res.status === 403) throw new Error('401');
+      const json = await res.json();
+      const ok = type === 'cwa'
+        ? json.success === 'true' || json.success === true
+        : Array.isArray(json) || Array.isArray(json.records) || json.records?.length > 0;
+      if (ok) {
+        resultEl.className = 'key-test-result success';
+        resultEl.textContent = t('testKeyOk');
+      } else {
+        throw new Error('invalid');
+      }
+    } catch (err) {
+      resultEl.className = 'key-test-result error';
+      const msg = err.message === '401' ? `${t('testKeyFail')}：授權碼錯誤` :
+                  err.message === 'invalid' ? `${t('testKeyFail')}：回傳格式異常` :
+                  `${t('testKeyFail')}：${err.message.slice(0,30)}`;
+      resultEl.textContent = msg;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  if (testCwaKeyBtn) {
+    testCwaKeyBtn.addEventListener('click', () => testApiKey('cwa', apiKeyInput, cwaKeyTestResult, testCwaKeyBtn));
+  }
+  if (testMoenvKeyBtn) {
+    testMoenvKeyBtn.addEventListener('click', () => testApiKey('moenv', moenvApiKeyInput, moenvKeyTestResult, testMoenvKeyBtn));
+  }
+
+  // ── AQI Card Expand/Collapse ────────────────────────────────────
+  if (airQualityCard && aqiDetailPanel) {
+    airQualityCard.addEventListener('click', (e) => {
+      // Don't toggle if clicking the no-key hint
+      if (e.target.closest('#aqi-no-key-hint')) return;
+      const isExpanded = airQualityCard.classList.toggle('expanded');
+      if (isExpanded) {
+        aqiDetailPanel.classList.remove('hidden');
+        // Trigger reflow for CSS transition
+        aqiDetailPanel.offsetHeight;
+        aqiDetailPanel.classList.add('open');
+      } else {
+        aqiDetailPanel.classList.remove('open');
+      }
+    });
+  }
 
   // AQI no-key hint: open settings
   aqiNoKeyHint.addEventListener("click", () => {
