@@ -432,4 +432,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     updateToolbarIcon(msg.temp, msg.wx).then(() => sendResponse({ ok: true }));
     return true;
   }
+  if (msg.type === "FETCH_OPEN_METEO_POP") {
+    fetchOpenMeteoPoPBG(msg.lat, msg.lon)
+      .then(data => sendResponse({ ok: true, data }))
+      .catch(err => sendResponse({ ok: false, error: err.message }));
+    return true;
+  }
 });

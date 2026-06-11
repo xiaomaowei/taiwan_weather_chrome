@@ -1200,6 +1200,28 @@ function performSearch(query) {
 
 // ── Open-Meteo PoP Supplement ────────────────────────────────────────────────
 async function fetchOpenMeteoPoP(lat, lon) {
+  // Try sending message to background script first (most reliable for CORS/CSP/Host permissions in MV3)
+  if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+    try {
+      const response = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: "FETCH_OPEN_METEO_POP", lat, lon }, (res) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(res);
+          }
+        });
+      });
+      if (response && response.ok) {
+        return response.data;
+      }
+      console.warn("[Popup] Background fetchOpenMeteoPoP returned error:", response?.error);
+    } catch (err) {
+      console.warn("[Popup] Background message FETCH_OPEN_METEO_POP failed, falling back to local fetch:", err.message);
+    }
+  }
+
+  // Fallback to direct fetch in popup context
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
                 `&daily=precipitation_probability_max&timezone=Asia%2FTaipei&forecast_days=7`;
@@ -1211,7 +1233,7 @@ async function fetchOpenMeteoPoP(lat, lon) {
     if (!dates || !pops || dates.length !== pops.length) return null;
     return dates.map((date, i) => ({ date, pop: pops[i] }));
   } catch (err) {
-    console.warn("[Popup] Open-Meteo fetch failed:", err.message);
+    console.warn("[Popup] Open-Meteo local fetch failed:", err.message);
     return null;
   }
 }
