@@ -17,26 +17,17 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 * 🔍 **Bilingual Search & Dynamic Translation**: Fuzzy search by Chinese or Pinyin for any township. All weather data (Wx, wind, AQI, etc.) is provided with high-quality bilingual translation.
 * 📍 **Fine-grained Location**: All 22 counties/cities and every township/district in Taiwan.
 * 🌦️ **Real-time Weather**: Temperature, apparent temperature, humidity, precipitation probability, wind speed/direction.
-* 🌧️ **Rainfall Alert (Daily Cumulative / Hourly auto-switch)**: Integrates CWA rain gauge API (`O-A0002-001`). Triggers a **red breathing light alert** when hourly rainfall reaches 30 mm or more.
-* 🔔 **Official Weather Alerts (v2.3 New)**: Fetches live CWA weather warning API (`W-C0033-001`). Supports heavy rain, strong wind, cold snap, heat, typhoon, and more. Displayed as a prominent alert banner on the main screen.
-* 📊 **Intelligent Daily Summary (v2.3 New)**: Auto-generates a one-line summary based on temperature, precipitation probability, rainfall amount, AQI, and weather alerts (e.g., “Rain expected later — bring an umbrella ☂️” or “Good air quality — great for outdoor activities 🌿”).
-* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Auto-matches the nearest monitoring station. Click the AQI card to **expand detailed pollutant data** (v2.3 New): PM10, O₃, NO₂, CO, SO₂, plus personalized health advice based on the current AQI level.
-* 📅 **Weekly Forecast (v2.3 Visual Upgrade)**: 7-day forecast with enhanced readability. Tomorrow’s card is highlighted; precipitation probability is color-coded by intensity (blue for low, red for high); each card shows a data-source badge (`CWA` yellow / `OM` blue).
-* 🎨 **Healing Hand-drawn Design**: Curated light and dark themes with cute hand-drawn borders and subtle micro-animations.
-* 🔌 **API Key Quick Test (v2.3 New)**: A “Test Connection” button in Settings lets you instantly validate a CWA or MOENV API key without saving and reloading.
+* 🌧️ **Rainfall Alert**: Integrates CWA rain gauge API to display daily cumulative rainfall and hourly rainfall warnings (triggers a red breathing light alert when hourly rainfall ≥ 30 mm).
+* 🔔 **Official Weather Alerts**: Fetches live official warnings (heavy rain, strong wind, typhoon, etc.) and displays a prominent warning banner.
+* 📊 **Intelligent Daily Summary**: Auto-generates a one-line summary based on current parameters and alerts, letting you grasp today's highlights at a glance.
+* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Matches the nearest monitoring station. Click to expand PM10, O₃, NO₂, CO, SO₂ details and personalized health advice.
+* 📅 **Weekly Forecast**: 7-day forecast with highlighted tomorrow's card, color-coded precipitation probability, and clear data source badges.
+* 🎨 **Healing Hand-drawn Design**: Warm light and dark chalkboard themes with hand-drawn borders and micro-animations.
 * 🏷️ **Quick Area Switch**: Fuzzy search + one-click saving of frequently visited townships.
-* 🌡️ **Real-time Temperature Icon**: Extension toolbar icon shows the live temperature of your primary location with auto-changing background colors.
-* ⚡ **Caching & Performance**: Built-in Service Worker background caching (customizable TTL) minimizes redundant API calls.
-* ✒️ **Google Fonts & Size Optimization (v2.3.2 Update)**: Reverted back to Google Fonts online links for Fredoka and Outfit fonts and removed over 38MB of local font files, dramatically reducing extension package size.
-* ✍️ **Chinese Legibility & Layout Optimization (v2.3.2 Update)**: Fell back to clean, high-legibility system fonts (like Microsoft JhengHei, PingFang SC) for Chinese characters, and enlarged Chinese text sizes by 1-2px, solving the thin and blurry font issues. The "Today's Summary" has been moved inside the main weather card (below the current condition and above the details grid) for a cleaner layout.
-* 📏 **Popup Height & Layout Optimization (v2.3.3 New)**: Set a fixed popup height of 595px to instruct Chrome to display the window fully, and tightened padding and margins around elements (saving 38px of vertical space) to completely eliminate vertical scrollbars.
-* 📐 **Side-by-Side Summary & Enlarged UI Icons (v2.3.4 New)**: Relocated the "Today's Summary" to be side-by-side on the top right of the card, aligned with the left-aligned weather icon and temperature, saving a full row of vertical height. Additionally, enlarged the AQI expand arrow to 16px and boosted its contrast, facilitating user interaction.
-* 🎀 **Today's Summary Visual Fine-tuning (v2.3.5 New)**: Removed the background border and color from the summary text block for a cleaner look, and removed the duplicate trailing weather emoji in the i18n text, leaving only the primary front icon.
-* 🌧️ **Weekly Forecast 100% Rain Probability Layout Fine-tuning (v2.3.6 New)**: To prevent three-digit rain probabilities (e.g. 100%) from wrapping and breaking the layout in the narrow weekly cards, we adjusted the font size to 9px and set the icon-to-text gap to 0px, ensuring everything stays neatly on one line.
-* 🗜️ **Popup Bottom Blank Space Reduction (v2.3.7 New)**: Reduced the fixed body height from 595px to 560px to tightly fit the forecast section's bottom edge while keeping a small, comfortable margin, eliminating the redundant blank space left by previous layout optimizations.
-* ⏱️ **Real-time Observation Precision Boost (v2.3.8 New)**: Integrates the CWA weather station real-time observation API (`O-A0003-001`). The extension automatically pairs with the nearest weather station (calculated by coordinates or matched by township) to retrieve the most recent temperature, apparent temperature, humidity, wind scale, wind direction, and weather condition observed within the last 10 minutes, significantly improving accuracy.
-* ⚙️ **Full-screen Settings Panel & Slide-up Animation (v2.3.8 New)**: Reconstructed the settings overlay into a fixed full-screen slide-up settings page. Transition animations are optimized from the scale-in pop-up to a smooth slide-up animation from the bottom. Custom scrollbars with hand-drawn styles are also integrated to handle long configurations cleanly.
-* 🌐 **Background Proxy Fetch for Open-Meteo PoP (v2.3.8 New)**: Redirects Open-Meteo precipitation probability API requests through the background Service Worker. This bypasses Manifest V3 CORS/CSP and host permission restrictions inside the popup context, while keeping the local fetch as a graceful fallback.
+* 🌡️ **Real-time Temperature Icon**: Extension toolbar icon shows live temperature and changes background color accordingly.
+* ⚡ **Caching & Performance**: Service Worker background caching and background proxy fetch to optimize API requests and bypass Manifest V3 limitations.
+
+> 💡 For detailed version updates and history, please refer to [Change Log (CHANGELOG.en.md)](./CHANGELOG.en.md).
 
 ---
 
@@ -51,7 +42,10 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 
 ---
 
-## 📦 Installation Guide
+## 📦 Installation & Setup
+
+<details>
+<summary><b>🛠️ Click to expand: Manual Installation Guide</b></summary>
 
 1. **Download this repository**:
    * Click the `Code` button in the top right, select `Download ZIP` and extract it, or clone the repository via Git:
@@ -68,9 +62,10 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 5. **Pin to Toolbar**:
    * Click the Extensions puzzle icon 🧩 in the top-right of Chrome, find "Taiwan Weather", and click the pin icon to keep it visible on your toolbar for real-time temperature updates!
 
----
+</details>
 
-## 🔑 Apply & Configure CWA API Key (Weather)
+<details>
+<summary><b>🔑 Click to expand: Apply & Configure CWA API Key (Weather)</b></summary>
 
 To ensure real-time weather information is fetched successfully, it is recommended to configure your own CWA API authorization key:
 
@@ -83,9 +78,10 @@ To ensure real-time weather information is fetched successfully, it is recommend
    * Paste your key into the "CWA API Key" field and click **"Save Settings"**.
    * *(Note: This project does not pre-configure any API keys. Please obtain one to retrieve weather data, or turn on "Demo Mode" in settings to preview the extension.)*
 
----
+</details>
 
-## 🔑 Apply & Configure MOENV API Key (Air Quality)
+<details>
+<summary><b>🔑 Click to expand: Apply & Configure MOENV API Key (Air Quality)</b></summary>
 
 To display real-time AQI and PM2.5 data, it is recommended to configure your Ministry of Environment API key:
 
@@ -96,27 +92,41 @@ To display real-time AQI and PM2.5 data, it is recommended to configure your Min
    * Paste your key into the "MOENV API Key" field and click **"Save Settings"**.
    * *(Note: No API key is pre-configured. If empty, the air quality card will display a link prompting you to configure the key.)*
 
+</details>
+
 ---
 
 ## 📢 Weather Data Info & Limitations
 
-* 💧 **Precipitation Probability Data Fusion (Weekly Forecast)**:
-  * **First 3 Days (Official CWA Data)**: Due to the characteristics of CWA's 12-hour interval 7-day forecast API, precipitation probability is only provided for the first 3 days. The extension prioritizes displaying these official statistics.
-  * **Next 4 Days (Open-Meteo API Supplement)**: Since CWA does not provide precipitation probability for the latter half of the week, the extension automatically requests the coordinate-based maximum daily precipitation probability (`precipitation_probability_max`) from the keyless **Open-Meteo API** in the background.
-  * **Fault Tolerance**: If the Open-Meteo API request fails, the precipitation probability for days 4-7 will gracefully fall back to `💧--` without affecting other weather details.
+<details>
+<summary><b>💧 Click to expand: Precipitation Probability Data Fusion (Weekly Forecast)</b></summary>
 
-* 🌧️ **Real-time Rainfall Data**:
-  * **Data Source**: CWA Automatic Rain Gauge Observations (`O-A0002-001`), updated approximately every **10 minutes**.
-  * **Daily Cumulative**: The `RainfallElement.Now.Precipitation` field represents cumulative rainfall since **00:00 local time**.
-  * **Hourly Rainfall Alert**: The `RainfallElement.Past1hr.Precipitation` field represents cumulative rainfall in the past 1 hour. If this value is **≥ 30 mm** (heavy rain threshold), the UI automatically switches to display "Hourly Rainfall" and flashes a red breathing alert indicator.
-  * **Fault Tolerance**: If the rainfall API fails, the rainfall card will fallback to `-- mm` gracefully.
-  * **Special Codes**: `T` (trace amount, too small to measure); `-98` (no rain for 6 consecutive hours, displayed as 0.0 mm); `-99` / `X` (sensor malfunction or missing data, displayed as 0.0 mm).
+* **First 3 Days (Official CWA Data)**: Due to the characteristics of CWA's 12-hour interval 7-day forecast API, precipitation probability is only provided for the first 3 days. The extension prioritizes displaying these official statistics.
+* **Next 4 Days (Open-Meteo API Supplement)**: Since CWA does not provide precipitation probability for the latter half of the week, the extension automatically requests the coordinate-based maximum daily precipitation probability (`precipitation_probability_max`) from the keyless **Open-Meteo API** in the background.
+* **Fault Tolerance**: If the Open-Meteo API request fails, the precipitation probability for days 4-7 will gracefully fall back to `💧--` without affecting other weather details.
 
-* ⏱️ **Real-time Weather Observation Details**:
-  * **Data Source**: CWA Weather Station Real-time Observations (`O-A0003-001`), updated approximately every **10 minutes**.
-  * **Station Matching Mechanism**: The extension calculates the straight-line distance between the selected township's center coordinates and available weather stations, choosing the closest active station. If coordinate data is missing, it falls back to a township name fuzzy match.
-  * **Observation Parameters**: Includes temperature, humidity, wind speed, wind direction, and weather condition description. Apparent temperature is calculated dynamically based on the station's real-time temperature, humidity, and wind speed.
-  * **Fault Tolerance & Fallback**: If a specific parameter is missing (e.g. sensor malfunction returning `-99`) or the observation API request fails, the extension gracefully falls back to the forecasted values from CWA's township forecasts (`F-D0047` series), ensuring uninterrupted display.
+</details>
+
+<details>
+<summary><b>🌧️ Click to expand: Real-time Rainfall Data & Warnings</b></summary>
+
+* **Data Source**: CWA Automatic Rain Gauge Observations (`O-A0002-001`), updated approximately every **10 minutes**.
+* **Daily Cumulative**: The `RainfallElement.Now.Precipitation` field represents cumulative rainfall since **00:00 local time**.
+* **Hourly Rainfall Alert**: The `RainfallElement.Past1hr.Precipitation` field represents cumulative rainfall in the past 1 hour. If this value is **≥ 30 mm** (heavy rain threshold), the UI automatically switches to display "Hourly Rainfall" and flashes a red breathing alert indicator.
+* **Fault Tolerance**: If the rainfall API fails, the rainfall card will fallback to `-- mm` gracefully.
+* **Special Codes**: `T` (trace amount, too small to measure); `-98` (no rain for 6 consecutive hours, displayed as 0.0 mm); `-99` / `X` (sensor malfunction or missing data, displayed as 0.0 mm).
+
+</details>
+
+<details>
+<summary><b>⏱️ Click to expand: Real-time Weather Observation Details & Matching</b></summary>
+
+* **Data Source**: CWA Weather Station Real-time Observations (`O-A0003-001`), updated approximately every **10 minutes**.
+* **Station Matching Mechanism**: The extension calculates the straight-line distance between the selected township's center coordinates and available weather stations, choosing the closest active station. If coordinate data is missing, it falls back to a township name fuzzy match.
+* **Observation Parameters**: Includes temperature, humidity, wind speed, wind direction, and weather condition description. Apparent temperature is calculated dynamically based on the station's real-time temperature, humidity, and wind speed.
+* **Fault Tolerance & Fallback**: If a specific parameter is missing (e.g. sensor malfunction returning `-99`) or the observation API request fails, the extension gracefully falls back to the forecasted values from CWA's township forecasts (`F-D0047` series), ensuring uninterrupted display.
+
+</details>
 
 ---
 
