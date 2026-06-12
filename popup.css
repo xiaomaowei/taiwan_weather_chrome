@@ -1006,10 +1006,19 @@ input:checked + .slider:before {
 
 .settings-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   border-top: 2px dashed var(--border-color);
   padding-top: 10px;
   margin-top: 4px;
+}
+
+.settings-version {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 /* Dynamic Hand Drawn Icon Canvas and styling */

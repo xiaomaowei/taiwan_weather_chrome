@@ -1723,6 +1723,23 @@ function init() {
       activeUILang = resolveUILang(currentSettings);
       applyI18nDOM();
 
+      // 設定設定頁面左下角版本號
+      const settingsVersion = document.getElementById("settings-version");
+      if (settingsVersion) {
+        let version = "2.3.8"; // 預設的 fallback 版本號
+        if (typeof chrome !== "undefined" && chrome.runtime?.getManifest) {
+          try {
+            const manifest = chrome.runtime.getManifest();
+            if (manifest && manifest.version) {
+              version = manifest.version;
+            }
+          } catch (e) {
+            console.warn("無法取得 manifest 版本號:", e);
+          }
+        }
+        settingsVersion.textContent = `v${version}`;
+      }
+
       applyTheme(currentSettings.theme || "cute-light-theme");
       renderFavoritesBar();
       fetchWeather();
