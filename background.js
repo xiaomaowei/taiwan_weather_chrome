@@ -511,7 +511,7 @@ async function setupAlarm() {
   const settings = await getSettings();
   const periodMinutes = settings.cacheTtlMinutes || 60;
 
-  await chrome.alarms.clearAll();
+  await chrome.alarms.clear(ALARM_NAME);
   chrome.alarms.create(ALARM_NAME, {
     delayInMinutes: periodMinutes,
     periodInMinutes: periodMinutes

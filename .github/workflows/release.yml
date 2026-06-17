@@ -18,7 +18,8 @@ jobs:
       - name: Prepare Extension Files
         run: |
           mkdir -p dist/icons
-          cp manifest.json background.js popup.html popup.css popup.js city_county_data.js dist/
+          cp manifest.json background.js popup.html popup.css popup.js city_county_data.js i18n_data.js dist/
+          cp -r _locales dist/
           cp icons/icon16.png icons/icon48.png icons/icon128.png dist/icons/
 
       - name: Zip extension
