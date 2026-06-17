@@ -4,6 +4,13 @@ All notable changes and updates to the "Taiwan Weather Chrome Extension" are doc
 
 ---
 
+## [v2.3.9] - 2026-06-17
+### Fixed
+- **Fixed missing files in release package**: The CI release workflow previously failed to copy `i18n_data.js` and the `_locales` folder, causing the published zip to be missing translations. The packaging script has been fixed to include all required files.
+- **Fixed alarm-clearing logic**: When `background.js` resets the background schedule, it previously called `chrome.alarms.clearAll()`, which would clear every alarm registered by the extension. It now uses `chrome.alarms.clear(ALARM_NAME)` to clear only its own alarm, avoiding interference with future scheduled tasks.
+### Refactored
+- **Extracted shared weather utility module**: `background.js` and `popup.js` each maintained their own copy of weather parsing, rainfall, real-time observation, Open-Meteo PoP supplementation, apparent temperature, and wind-scale conversion logic — a duplication risk for bug fixes. This logic has been consolidated into a new shared `weather_utils.js`, used by both the background script and the popup. Pure internal cleanup; no user-facing behavior changes.
+
 ## [v2.3.8] - 2026-06-11
 ### Added
 - **Real-time Observation Precision Boost**: Integrates the CWA weather station real-time observation API (`O-A0003-001`). The extension automatically pairs with the nearest weather station (calculated by coordinates or matched by township) to retrieve the most recent temperature, apparent temperature, humidity, wind scale, wind direction, and weather condition observed within the last 10 minutes, significantly improving accuracy.
