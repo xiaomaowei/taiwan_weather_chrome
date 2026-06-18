@@ -4,6 +4,10 @@ All notable changes and updates to the "Taiwan Weather Chrome Extension" are doc
 
 ---
 
+## [v2.3.10] - 2026-06-18
+### Changed
+- **Refined rain-intensity tiering in Today's Summary**: The summary previously only escalated to a "heavy rain" warning once hourly rainfall reached 30mm. The threshold is now lowered to 15mm, with a new "very heavy rain" tier above 40mm. Also added an escalated warning when rain probability reaches 80% or higher, even before hourly rainfall data catches up — so the summary better reflects severe weather as it's happening.
+
 ## [v2.3.9] - 2026-06-17
 ### Fixed
 - **Fixed missing files in release package**: The CI release workflow previously failed to copy `i18n_data.js` and the `_locales` folder, causing the published zip to be missing translations. The packaging script has been fixed to include all required files.

@@ -74,7 +74,9 @@ const I18N_STRINGS = {
     aqiHealthUnhealthy: "請避免長時間戶外活動 😷",
     aqiHealthVeryUnhealthy: "外出請配戴口罩 🚨",
     aqiHealthHazardous: "盡量留在室內，避免外出 ⛔",
+    summaryRainExtreme: "近 1 小時雨勢非常強，留意淹水及外出安全",
     summaryRainHeavy: "近 1 小時雨勢偏強，留意積水",
+    summaryRainHighProb: "降雨機率高，記得攜帶雨具並留意路況",
     summaryRainToday: "午後有雨，出門記得帶傘",
     summaryGoodAqi: "空品良好，適合戶外活動",
     summaryHot: "天氣炎熱，注意防曬補水",
@@ -130,7 +132,9 @@ const I18N_STRINGS = {
     aqiHealthUnhealthy: "Avoid prolonged outdoor exposure 😷",
     aqiHealthVeryUnhealthy: "Wear a mask outdoors 🚨",
     aqiHealthHazardous: "Stay indoors, avoid going out ⛔",
+    summaryRainExtreme: "Very heavy rain in the past hour — watch for flooding and stay safe",
     summaryRainHeavy: "Heavy rain in the past hour — watch for flooding",
+    summaryRainHighProb: "High chance of rain — bring rain gear and watch the roads",
     summaryRainToday: "Rain expected later — bring an umbrella",
     summaryGoodAqi: "Good air quality — great for outdoor activities",
     summaryHot: "Hot day — stay hydrated and use sun protection",
@@ -413,16 +417,22 @@ function generateTodaySummary(current, aqiVal, weatherAlerts) {
       isAlert: true
     };
   }
-  // Heavy hourly rain
+  // Hourly rain intensity, tiered by CWA-style severity
   const rain = current.rainAmount;
   if (rain && typeof rain === 'object') {
     const past1hr = parseFloat(rain.past1hr);
-    if (!isNaN(past1hr) && past1hr >= 30) {
+    if (!isNaN(past1hr) && past1hr >= 40) {
+      return { icon: '⛈️', text: t('summaryRainExtreme'), isAlert: true };
+    }
+    if (!isNaN(past1hr) && past1hr >= 15) {
       return { icon: '🌧️', text: t('summaryRainHeavy'), isAlert: true };
     }
   }
-  // High rain probability
+  // High rain probability — escalate wording even if hourly rain hasn't caught up yet
   const rainProb = parseInt(current.rainProb) || 0;
+  if (rainProb >= 80) {
+    return { icon: '☔', text: t('summaryRainHighProb'), isAlert: true };
+  }
   if (rainProb >= 50) {
     return { icon: '☂️', text: t('summaryRainToday'), isAlert: false };
   }
