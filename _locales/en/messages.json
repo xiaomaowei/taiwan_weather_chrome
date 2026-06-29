@@ -108,10 +108,10 @@
     "message": "Hourly Rain"
   },
   "labelWindScale": {
-    "message": "Wind Scale"
+    "message": "Wind / Gust"
   },
   "labelWindScaleUnit": {
-    "message": ""
+    "message": "m/s"
   },
   "labelWindDir": {
     "message": "Wind Direction"

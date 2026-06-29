@@ -123,7 +123,7 @@
             <span id="detail-rain-amount" class="detail-value">-- mm</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label" data-i18n="labelWindScale">風力級別</span>
+            <span class="detail-label" data-i18n="labelWindScale">風速/陣風</span>
             <span id="detail-wind-scale" class="detail-value">--</span>
           </div>
           <div class="detail-item">
@@ -131,50 +131,29 @@
             <span id="detail-wind-dir" class="detail-value">--</span>
           </div>
         </div>
-      </section>
 
-      <!-- Air Quality Card -->
-      <section id="air-quality-card" class="air-quality-card">
-        <div class="aqi-card-content">
-          <div class="aqi-icon-area">
-            <svg class="aqi-leaf-icon" viewBox="0 0 40 40" width="32" height="32">
+        <!-- Inline Air Quality Strip (AQI + PM2.5 only) -->
+        <div id="aqi-inline" class="aqi-inline">
+          <div class="aqi-inline-content">
+            <svg class="aqi-leaf-icon" viewBox="0 0 40 40" width="24" height="24">
               <path d="M20 4 C10 8, 6 18, 8 28 C10 24, 14 20, 20 18 C26 20, 30 24, 32 28 C34 18, 30 8, 20 4Z" fill="var(--aqi-badge-bg, #a8e6cf)" stroke="var(--border-color)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M20 18 v14" stroke="var(--border-color)" stroke-width="2.5" stroke-linecap="round"/>
               <path d="M20 22 Q16 19 14 21" stroke="var(--border-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
               <path d="M20 26 Q24 23 26 25" stroke="var(--border-color)" stroke-width="2" fill="none" stroke-linecap="round"/>
             </svg>
-          </div>
-          <div class="aqi-data-area">
             <div class="aqi-data-row">
               <span class="aqi-label">AQI</span>
               <span id="aqi-value" class="aqi-value">--</span>
               <span class="aqi-separator">│</span>
               <span class="aqi-label">PM2.5</span>
               <span id="pm25-value" class="aqi-value">-- <small>μg/m³</small></span>
+              <span id="aqi-station-name" class="aqi-station-name"></span>
             </div>
-            <div id="aqi-station-name" class="aqi-station-name"></div>
-          </div>
-          <div class="aqi-badge-area">
             <span id="aqi-status-badge" class="aqi-status-badge aqi-level-unknown">--</span>
           </div>
-        </div>
-        <div id="aqi-no-key-hint" class="aqi-no-key-hint hidden">
-          <span data-i18n="aqiNoKeyHint">🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
-        </div>
-        <!-- AQI Expandable Detail Panel -->
-        <div id="aqi-detail-panel" class="aqi-detail-panel hidden">
-          <div class="aqi-detail-grid">
-            <div class="aqi-detail-item"><span class="aqi-detail-label">PM10</span><span id="aqi-d-pm10" class="aqi-detail-value">--</span></div>
-            <div class="aqi-detail-item"><span class="aqi-detail-label">O₃</span><span id="aqi-d-o3" class="aqi-detail-value">--</span></div>
-            <div class="aqi-detail-item"><span class="aqi-detail-label">NO₂</span><span id="aqi-d-no2" class="aqi-detail-value">--</span></div>
-            <div class="aqi-detail-item"><span class="aqi-detail-label">CO</span><span id="aqi-d-co" class="aqi-detail-value">--</span></div>
-            <div class="aqi-detail-item"><span class="aqi-detail-label">SO₂</span><span id="aqi-d-so2" class="aqi-detail-value">--</span></div>
-            <div class="aqi-detail-item"><span id="aqi-d-health-label" class="aqi-detail-label">健康建議</span><span id="aqi-d-health" class="aqi-detail-value health-advice">--</span></div>
+          <div id="aqi-no-key-hint" class="aqi-no-key-hint hidden">
+            <span data-i18n="aqiNoKeyHint">🌿 點此設定環境部 API 金鑰以顯示空氣品質</span>
           </div>
-        </div>
-        <!-- AQI expand toggle indicator -->
-        <div id="aqi-expand-toggle" class="aqi-expand-toggle">
-          <span id="aqi-expand-arrow" class="aqi-expand-arrow">▾</span>
         </div>
       </section>
 
@@ -279,7 +258,7 @@
         </div>
 
         <div class="settings-footer">
-          <span id="settings-version" class="settings-version">v2.3.10</span>
+          <span id="settings-version" class="settings-version">v2.3.11</span>
           <button id="settings-save-btn" class="cute-btn primary" data-i18n="settingsSave">儲存設定</button>
         </div>
       </div>

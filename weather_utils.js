@@ -15,25 +15,6 @@ function calculateApparentTemp(temp, rh, windSpeed) {
   return Math.round(at);
 }
 
-// ── Wind speed (m/s) → Beaufort scale ───────────────────────────────────────────
-function windSpeedToBeaufort(ws) {
-  const v = parseFloat(ws);
-  if (isNaN(v)) return "--";
-  if (v <= 0.2) return 0;
-  if (v <= 1.5) return 1;
-  if (v <= 3.3) return 2;
-  if (v <= 5.4) return 3;
-  if (v <= 7.9) return 4;
-  if (v <= 10.7) return 5;
-  if (v <= 13.8) return 6;
-  if (v <= 17.1) return 7;
-  if (v <= 20.7) return 8;
-  if (v <= 24.4) return 9;
-  if (v <= 28.4) return 10;
-  if (v <= 32.6) return 11;
-  return 12;
-}
-
 // ── Wind degree → 16-point cardinal direction (Traditional Chinese) ────────────
 function windDegreeToCardinal(deg) {
   const d = parseFloat(deg);
@@ -157,6 +138,7 @@ async function fetchRealTimeObservation(county, township, apiKey, coords) {
     const temp = parseObservationValue(weatherEl.AirTemperature);
     const rh = parseObservationValue(weatherEl.RelativeHumidity);
     const windSpeed = parseObservationValue(weatherEl.WindSpeed);
+    const windGust = parseObservationValue(weatherEl.GustInfo?.PeakGustSpeed);
     const windDirDeg = parseObservationValue(weatherEl.WindDirection);
     const wx = weatherEl.Weather || null;
 
@@ -164,8 +146,8 @@ async function fetchRealTimeObservation(county, township, apiKey, coords) {
       temp: temp !== null ? String(Math.round(temp)) : null,
       humidity: rh !== null ? String(Math.round(rh)) : null,
       windSpeed: windSpeed,
+      windGust: windGust,
       windDirection: windDirDeg !== null ? windDegreeToCardinal(windDirDeg) : null,
-      windScale: windSpeed !== null ? String(windSpeedToBeaufort(windSpeed)) : null,
       wx: (wx && wx !== "-99" && wx !== "-999" && wx !== "X" && wx !== "x") ? wx : null
     };
   } catch (err) {
@@ -282,7 +264,8 @@ function parseCWAForecastData(json, township) {
     apparentTemp:  getTV(maxATTimes[0], "MaxApparentTemperature",   "value") || getTV(minATTimes[0], "MinApparentTemperature", "value") || "--",
     humidity:      getTV(rhTimes[0],    "RelativeHumidity",         "value") || "--",
     rainProb:      getTV(popTimes[0],   "ProbabilityOfPrecipitation","value") || "0",
-    windScale:     getTV(windTimes[0],  "BeaufortScale",            "value") || "--",
+    windSpeed:     getTV(windTimes[0],  "WindSpeed",                "value") || "--",
+    windGust:      "--",
     windDirection: getTV(windDTimes[0], "WindDirection",            "value") || "--",
     wx:            getTV(wxTimes[0],    "Weather",                  "value") || "多雲"
   };

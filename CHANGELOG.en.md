@@ -4,6 +4,11 @@ All notable changes and updates to the "Taiwan Weather Chrome Extension" are doc
 
 ---
 
+## [v2.3.11] - 2026-06-29
+### Changed
+- **Weather detail now shows "Wind / Gust"**: The former "Wind Scale" field displayed the Beaufort scale number (e.g. "1"). It now shows the actual wind speed and peak gust from CWA's real-time observation station (e.g. "2.3 / 5.4 m/s"), which is more intuitive and precise. The gust value is read from the observation API (`O-A0003-001`) field `GustInfo.PeakGustSpeed`. The now-unused `windSpeedToBeaufort` conversion helper was removed. On upgrade, old-format caches (missing the wind speed fields) are automatically invalidated and refetched so the field doesn't show `--`.
+- **Air quality merged into the weather card**: The standalone air quality card (with its expandable PM10, O₃, NO₂, CO, SO₂ and health-advice detail panel) is now condensed into a single inline row at the bottom of the weather card, showing only AQI and PM2.5 while keeping the colored status badge (Good / Moderate …) and station name. Dropping a separate card makes the popup more compact, and the now-unused pollutant detail panel markup, styles and logic were removed. When the MOENV API key isn't set, the row shows the setup hint in place.
+
 ## [v2.3.10] - 2026-06-18
 ### Changed
 - **Refined rain-intensity tiering in Today's Summary**: The summary previously only escalated to a "heavy rain" warning once hourly rainfall reached 30mm. The threshold is now lowered to 15mm, with a new "very heavy rain" tier above 40mm. Also added an escalated warning when rain probability reaches 80% or higher, even before hourly rainfall data catches up — so the summary better reflects severe weather as it's happening.

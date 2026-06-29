@@ -1065,34 +1065,29 @@ input:checked + .slider:before {
 }
 
 /* ── Air Quality Card ──────────────────────────────────────────── */
-.air-quality-card {
-  background-color: var(--card-bg);
-  border: var(--border-width) solid var(--border-color);
-  border-radius: var(--wobbly-radius-2);
-  padding: 10px 12px;
-  box-shadow: 4px 4px 0px var(--shadow-color);
+/* ── Inline Air Quality Strip (embedded at bottom of weather card) ── */
+.aqi-inline {
   position: relative;
-  overflow: hidden;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 2px dashed var(--border-color);
 }
 
-.air-quality-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0px var(--shadow-color);
-}
-
-.aqi-card-content {
+.aqi-inline-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
-.aqi-icon-area {
+/* When the no-key hint is shown, hide the data row */
+.aqi-inline:has(> .aqi-no-key-hint:not(.hidden)) .aqi-inline-content {
+  display: none;
+}
+
+.aqi-leaf-icon {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   animation: leaf-sway 3s ease-in-out infinite;
 }
 
@@ -1102,15 +1097,9 @@ input:checked + .slider:before {
   75% { transform: rotate(4deg); }
 }
 
-.aqi-data-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
 .aqi-data-row {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: baseline;
   gap: 5px;
@@ -1150,11 +1139,8 @@ input:checked + .slider:before {
   opacity: 0.8;
 }
 
-.aqi-badge-area {
-  flex-shrink: 0;
-}
-
 .aqi-status-badge {
+  flex-shrink: 0;
   font-family: var(--font-primary);
   font-size: 11px;
   font-weight: 800;
@@ -1239,20 +1225,16 @@ input:checked + .slider:before {
   color: #d7ccc8;
 }
 
-/* No-key hint overlay */
+/* No-key hint (inline row) */
 .aqi-no-key-hint {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--card-bg);
-  border-radius: var(--wobbly-radius-2);
+  width: 100%;
+  padding: 2px 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  border-radius: var(--wobbly-radius-2);
 }
 
 .aqi-no-key-hint:hover {
@@ -1321,86 +1303,6 @@ input:checked + .slider:before {
 
 .summary-text {
   flex: 1;
-}
-
-/* ── AQI Expandable Detail Panel ─────────────────────────────── */
-.air-quality-card {
-  cursor: pointer;
-  user-select: none;
-}
-
-.aqi-expand-toggle {
-  display: flex;
-  justify-content: center;
-  margin-top: 4px;
-  padding-top: 2px;
-  border-top: 1px dashed var(--border-color);
-  opacity: 0.8;
-}
-
-.aqi-expand-arrow {
-  font-size: 16px;
-  color: var(--text-secondary);
-  transition: transform 0.3s ease;
-  line-height: 1;
-}
-
-.air-quality-card.expanded .aqi-expand-arrow {
-  transform: rotate(180deg);
-}
-
-.aqi-detail-panel {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease,
-              padding 0.25s ease;
-  padding-top: 0;
-}
-
-.aqi-detail-panel.open {
-  max-height: 120px;
-  opacity: 1;
-  padding-top: 8px;
-}
-
-.aqi-detail-panel.hidden {
-  display: none !important;
-}
-
-.aqi-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px 8px;
-  border-top: 2px dashed var(--border-color);
-  padding-top: 8px;
-}
-
-.aqi-detail-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.aqi-detail-label {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--text-secondary);
-  letter-spacing: 0.3px;
-}
-
-.aqi-detail-value {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-color);
-}
-
-.aqi-detail-value.health-advice {
-  font-size: 10px;
-  color: var(--accent-color);
-  text-align: center;
 }
 
 /* ── Forecast Enhancements ───────────────────────────────────── */
@@ -1574,15 +1476,6 @@ html[lang="zh-TW"] .aqi-status-badge {
 }
 html[lang="zh-TW"] .aqi-no-key-hint {
   font-size: 12.5px; /* 原 11px */
-}
-html[lang="zh-TW"] .aqi-detail-label {
-  font-size: 12px; /* 原 10px */
-}
-html[lang="zh-TW"] .aqi-detail-value {
-  font-size: 12px; /* 原 11px */
-}
-html[lang="zh-TW"] .health-advice {
-  font-size: 11.5px; /* 原 10px */
 }
 html[lang="zh-TW"] .fav-chip {
   font-size: 13.5px; /* 原 12px */

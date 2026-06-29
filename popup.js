@@ -41,7 +41,7 @@ const I18N_STRINGS = {
     refreshTitle: "強制更新", refreshAria: "強制更新",
     labelApparentTemp: "體感溫度", labelHumidity: "相對濕度",
     labelRainProb: "降雨機率", labelDailyRain: "今日累積", labelHourlyRain: "時雨量",
-    labelWindScale: "風力級別", labelWindScaleUnit: "級", labelWindDir: "風向",
+    labelWindScale: "風速/陣風", labelWindScaleUnit: "m/s", labelWindDir: "風向",
     forecastTitle: "一週天氣預報", forecastToday: "今天", forecastTomorrow: "明天",
     forecastSun: "週日", forecastMon: "週一", forecastTue: "週二",
     forecastWed: "週三", forecastThu: "週四", forecastFri: "週五", forecastSat: "週六",
@@ -99,7 +99,7 @@ const I18N_STRINGS = {
     refreshTitle: "Force refresh", refreshAria: "Force refresh",
     labelApparentTemp: "Feels Like", labelHumidity: "Humidity",
     labelRainProb: "Rain Prob.", labelDailyRain: "Daily Total", labelHourlyRain: "Hourly Rain",
-    labelWindScale: "Wind Scale", labelWindScaleUnit: "", labelWindDir: "Wind Direction",
+    labelWindScale: "Wind / Gust", labelWindScaleUnit: "m/s", labelWindDir: "Wind Direction",
     forecastTitle: "7-Day Forecast", forecastToday: "Today", forecastTomorrow: "Tomorrow",
     forecastSun: "Sun", forecastMon: "Mon", forecastTue: "Tue",
     forecastWed: "Wed", forecastThu: "Thu", forecastFri: "Fri", forecastSat: "Sat",
@@ -236,7 +236,6 @@ const forecastListEl     = document.getElementById("forecast-list");
 const demoModeBanner     = document.getElementById("demo-mode-banner");
 
 // AQI DOM references
-const airQualityCard     = document.getElementById("air-quality-card");
 const aqiValueEl         = document.getElementById("aqi-value");
 const pm25ValueEl        = document.getElementById("pm25-value");
 const aqiStatusBadge     = document.getElementById("aqi-status-badge");
@@ -253,15 +252,6 @@ const searchResults       = document.getElementById("search-results");
 const todaySummaryBar    = document.getElementById("today-summary-bar");
 const todaySummaryIcon   = document.getElementById("today-summary-icon");
 const todaySummaryText   = document.getElementById("today-summary-text");
-const aqiDetailPanel     = document.getElementById("aqi-detail-panel");
-const aqiExpandArrow     = document.getElementById("aqi-expand-arrow");
-const aqiDPm10           = document.getElementById("aqi-d-pm10");
-const aqiDO3             = document.getElementById("aqi-d-o3");
-const aqiDNo2            = document.getElementById("aqi-d-no2");
-const aqiDCo             = document.getElementById("aqi-d-co");
-const aqiDSo2            = document.getElementById("aqi-d-so2");
-const aqiDHealth         = document.getElementById("aqi-d-health");
-const aqiDHealthLabel    = document.getElementById("aqi-d-health-label");
 const testCwaKeyBtn      = document.getElementById("test-cwa-key-btn");
 const cwaKeyTestResult   = document.getElementById("cwa-key-test-result");
 const testMoenvKeyBtn    = document.getElementById("test-moenv-key-btn");
@@ -378,7 +368,8 @@ function getMockWeatherData(county, township) {
     humidity: Math.round(65 + rand() * 25).toString(),
     rainProb: wx.type==="rainy" ? Math.round(50+rand()*50).toString() : wx.type==="thunderstorm" ? "85" : wx.type==="cloudy" ? "20" : "0",
     rainAmount: mockRainAmount,
-    windScale: String(Math.ceil(rand() * 5)),
+    windSpeed: (rand() * 6 + 1).toFixed(1),
+    windGust: (rand() * 8 + 3).toFixed(1),
     windDirection: windDirs[Math.floor(rand() * windDirs.length)],
     wx: wx.wx
   };
@@ -623,7 +614,7 @@ function getSVGIconHtml(wxText) {
 }
 
 // ── CWA API Parser ─────────────────────────────────────────────────────────────
-// parseCWAForecastData, calculateApparentTemp, windSpeedToBeaufort, windDegreeToCardinal
+// parseCWAForecastData, calculateApparentTemp, windDegreeToCardinal
 // are defined in weather_utils.js (shared with background.js)
 const parseCWAWeatherData = parseCWAForecastData;
 
@@ -700,10 +691,13 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Wind scale display
-  if (current.windScale !== "--") {
+  // Wind speed / gust display
+  const windSpeed = current.windSpeed;
+  const windGust = current.windGust;
+  if (windSpeed && windSpeed !== "--") {
     const unit = t("labelWindScaleUnit");
-    windScaleEl.textContent = unit ? `${current.windScale} ${unit}` : `${current.windScale}`;
+    const gustPart = (windGust && windGust !== "--") ? ` / ${windGust}` : "";
+    windScaleEl.textContent = `${windSpeed}${gustPart} ${unit}`;
   } else {
     windScaleEl.textContent = "--";
   }
@@ -766,8 +760,7 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
   // Demo mode: render mock AQI + summary inline
   if (currentSettings.demoMode) {
     const mock = getMockAqiData(loc.county, loc.township);
-    const mockExtra = { pm10: '25', o3: '32', no2: '12', co: '0.4', so2: '3' };
-    renderAirQuality(mock.aqi, mock.pm25, mock.stationName, mockExtra);
+    renderAirQuality(mock.aqi, mock.pm25, mock.stationName);
     const mockAlerts = getMockWeatherAlerts(loc.county);
     renderTodaySummary({ temp: current.temp, rainProb: current.rainProb, rainAmount: current.rainAmount },
       mock.aqi, mockAlerts);
@@ -790,7 +783,7 @@ function getAqiLevel(aqi) {
   return { className: "aqi-level-hazardous", label: t("aqiHazardous") };
 }
 
-function renderAirQuality(aqi, pm25, stationName, extraData) {
+function renderAirQuality(aqi, pm25, stationName) {
   aqiNoKeyHint.classList.add("hidden");
 
   aqiValueEl.textContent = aqi || "--";
@@ -800,27 +793,6 @@ function renderAirQuality(aqi, pm25, stationName, extraData) {
   const level = getAqiLevel(aqi);
   aqiStatusBadge.className = "aqi-status-badge " + level.className;
   aqiStatusBadge.textContent = level.label;
-
-  // Populate detail panel if extra data is provided
-  if (extraData && aqiDetailPanel) {
-    aqiDetailPanel.classList.remove('hidden');
-    aqiDPm10.textContent = extraData.pm10 ? `${extraData.pm10} μg/m³` : '--';
-    aqiDO3.textContent   = extraData.o3   ? `${extraData.o3} ppb`    : '--';
-    aqiDNo2.textContent  = extraData.no2  ? `${extraData.no2} ppb`   : '--';
-    aqiDCo.textContent   = extraData.co   ? `${extraData.co} ppm`    : '--';
-    aqiDSo2.textContent  = extraData.so2  ? `${extraData.so2} ppb`   : '--';
-    // Health advice based on AQI level
-    const healthKey = {
-      'aqi-level-good':          'aqiHealthGood',
-      'aqi-level-moderate':      'aqiHealthModerate',
-      'aqi-level-sensitive':     'aqiHealthSensitive',
-      'aqi-level-unhealthy':     'aqiHealthUnhealthy',
-      'aqi-level-very-unhealthy':'aqiHealthVeryUnhealthy',
-      'aqi-level-hazardous':     'aqiHealthHazardous',
-    }[level.className];
-    aqiDHealth.textContent = healthKey ? t(healthKey) : '--';
-    if (aqiDHealthLabel) aqiDHealthLabel.textContent = t('aqiDetailHealthLabel');
-  }
 }
 
 function findBestStation(records, county, township) {
@@ -885,15 +857,7 @@ async function fetchAirQuality(county, township) {
     const aqiVal = station.aqi || station.AQI || "--";
     const pm25Val = station["pm2.5"] || station["PM2.5"] || "--";
     const stationSuffix = t("aqiStationSuffix");
-    // Extra pollutant data
-    const extraData = {
-      pm10: station.pm10 || station.PM10 || null,
-      o3:   station.o3   || station.O3   || null,
-      no2:  station.no2  || station.NO2  || null,
-      co:   station.co   || station.CO   || null,
-      so2:  station.so2  || station.SO2  || null,
-    };
-    renderAirQuality(aqiVal, pm25Val, `${stationName}${stationSuffix}`, extraData);
+    renderAirQuality(aqiVal, pm25Val, `${stationName}${stationSuffix}`);
 
     // Update today summary now we have real AQI
     const tempStr = currentTempEl.textContent.replace('°','');
@@ -1082,7 +1046,7 @@ function performSearch(query) {
 
 // ── Open-Meteo PoP Supplement ────────────────────────────────────────────────
 // fetchRainAmount, fetchRealTimeObservation, fetchOpenMeteoPoP, calculateApparentTemp,
-// windSpeedToBeaufort, windDegreeToCardinal are all defined in weather_utils.js.
+// windDegreeToCardinal are all defined in weather_utils.js.
 // Popup prefers routing the Open-Meteo fetch through background.js (more reliable for
 // CORS/CSP/Host permissions in MV3), falling back to the shared direct fetch.
 async function fetchOpenMeteoPoPViaBackground(lat, lon) {
@@ -1138,10 +1102,11 @@ async function fetchWeather(force = false) {
     return;
   }
 
-  // Try cache first
+  // Try cache first. Skip pre-windSpeed/windGust caches so upgraded users
+  // refetch instead of seeing a stale "--" for the new wind speed / gust field.
   if (!force) {
     const cacheEntry = await readFromCache(loc.county, loc.township);
-    if (cacheEntry && isCacheValid(cacheEntry)) {
+    if (cacheEntry && isCacheValid(cacheEntry) && cacheEntry.data?.current?.windSpeed !== undefined) {
       const age = getCacheAge(cacheEntry);
       renderWeather(cacheEntry.data, true, age);
       return;
@@ -1173,7 +1138,8 @@ async function fetchWeather(force = false) {
     if (realTimeObs) {
       if (realTimeObs.temp !== null) parsedData.current.temp = realTimeObs.temp;
       if (realTimeObs.humidity !== null) parsedData.current.humidity = realTimeObs.humidity;
-      if (realTimeObs.windScale !== null) parsedData.current.windScale = realTimeObs.windScale;
+      if (realTimeObs.windSpeed !== null) parsedData.current.windSpeed = String(realTimeObs.windSpeed);
+      if (realTimeObs.windGust !== null) parsedData.current.windGust = String(realTimeObs.windGust);
       if (realTimeObs.windDirection !== null) parsedData.current.windDirection = realTimeObs.windDirection;
       if (realTimeObs.wx !== null) parsedData.current.wx = realTimeObs.wx;
       if (realTimeObs.temp !== null && realTimeObs.humidity !== null && realTimeObs.windSpeed !== null) {
@@ -1336,23 +1302,6 @@ function bindEvents() {
   }
   if (testMoenvKeyBtn) {
     testMoenvKeyBtn.addEventListener('click', () => testApiKey('moenv', moenvApiKeyInput, moenvKeyTestResult, testMoenvKeyBtn));
-  }
-
-  // ── AQI Card Expand/Collapse ────────────────────────────────────
-  if (airQualityCard && aqiDetailPanel) {
-    airQualityCard.addEventListener('click', (e) => {
-      // Don't toggle if clicking the no-key hint
-      if (e.target.closest('#aqi-no-key-hint')) return;
-      const isExpanded = airQualityCard.classList.toggle('expanded');
-      if (isExpanded) {
-        aqiDetailPanel.classList.remove('hidden');
-        // Trigger reflow for CSS transition
-        aqiDetailPanel.offsetHeight;
-        aqiDetailPanel.classList.add('open');
-      } else {
-        aqiDetailPanel.classList.remove('open');
-      }
-    });
   }
 
   // AQI no-key hint: open settings

@@ -108,10 +108,10 @@
     "message": "時雨量"
   },
   "labelWindScale": {
-    "message": "風力級別"
+    "message": "風速/陣風"
   },
   "labelWindScaleUnit": {
-    "message": "級"
+    "message": "m/s"
   },
   "labelWindDir": {
     "message": "風向"

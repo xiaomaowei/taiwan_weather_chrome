@@ -56,7 +56,7 @@ async function setCacheEntry(cacheKey, data) {
   });
 }
 
-// calculateApparentTemp, windSpeedToBeaufort, windDegreeToCardinal are defined in weather_utils.js
+// calculateApparentTemp, windDegreeToCardinal are defined in weather_utils.js
 
 // ── Dataset ID map (county → 7-day forecast dataset ID) ──────────────────────
 // Loaded from city_county_data.js in popup context; here we hardcode the map.
@@ -97,7 +97,8 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   if (realTimeObs) {
     if (realTimeObs.temp !== null) current.temp = realTimeObs.temp;
     if (realTimeObs.humidity !== null) current.humidity = realTimeObs.humidity;
-    if (realTimeObs.windScale !== null) current.windScale = realTimeObs.windScale;
+    if (realTimeObs.windSpeed !== null) current.windSpeed = String(realTimeObs.windSpeed);
+    if (realTimeObs.windGust !== null) current.windGust = String(realTimeObs.windGust);
     if (realTimeObs.windDirection !== null) current.windDirection = realTimeObs.windDirection;
     if (realTimeObs.wx !== null) current.wx = realTimeObs.wx;
     if (realTimeObs.temp !== null && realTimeObs.humidity !== null && realTimeObs.windSpeed !== null) {
