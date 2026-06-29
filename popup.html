@@ -159,9 +159,18 @@
 
       <!-- 7-Day Forecast Section -->
       <section class="forecast-section">
-        <h2 class="section-title" data-i18n="forecastTitle">一週天氣預報</h2>
         <div id="forecast-list" class="forecast-list">
           <!-- 7 Day forecast items will be dynamically injected here -->
+        </div>
+      </section>
+
+      <!-- 12-Hour Rain Trend (actual + forecast, past 6h → next 6h) -->
+      <section id="rain-trend-section" class="rain-trend-section hidden">
+        <div class="rain-trend-header">
+          <span id="rain-trend-total" class="rain-trend-total">-- mm</span>
+        </div>
+        <div id="rain-trend-chart" class="rain-trend-chart">
+          <!-- hourly rain bars injected via JS -->
         </div>
       </section>
 
@@ -258,7 +267,7 @@
         </div>
 
         <div class="settings-footer">
-          <span id="settings-version" class="settings-version">v2.3.11</span>
+          <span id="settings-version" class="settings-version">v2.3.12</span>
           <button id="settings-save-btn" class="cute-btn primary" data-i18n="settingsSave">儲存設定</button>
         </div>
       </div>

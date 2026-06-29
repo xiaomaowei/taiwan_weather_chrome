@@ -56,7 +56,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   width: 360px;
-  height: 560px;
+  height: 600px;
   overflow: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -67,7 +67,7 @@ body {
   flex-direction: column;
   width: 100%;
   height: auto;
-  padding: 10px 14px;
+  padding: 6px 14px;
   position: relative;
 }
 
@@ -515,7 +515,7 @@ body {
 .weather-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 11px;
 }
 
 .weather-content.hidden {
@@ -741,6 +741,100 @@ body {
   gap: 0px;
 }
 
+
+/* ── 12-Hour Rain Trend ─────────────────────────────────────────── */
+.rain-trend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rain-trend-section.hidden {
+  display: none !important;
+}
+
+.rain-trend-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  padding: 0 4px;
+}
+
+.rain-trend-total {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent-blue);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.rain-trend-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2px;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px 8px 10px 8px / 8px 10px 8px 12px;
+  padding: 3px 6px;
+}
+
+.rain-bar-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rain-bar-val {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  height: 8px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.rain-bar-track {
+  display: flex;
+  align-items: flex-end;
+  height: 34px;
+}
+
+.rain-bar {
+  width: 9px;
+  border-radius: 4px 4px 2px 2px;
+  background-color: color-mix(in srgb, var(--accent-blue) 55%, transparent);
+  transition: height 0.25s ease;
+}
+
+/* Past hours (actual rainfall) — muted; future hours (forecast) — accent blue */
+.rain-bar-col.past .rain-bar {
+  background-color: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+}
+
+.rain-bar-col.future .rain-bar {
+  background-color: var(--accent-blue);
+}
+
+.rain-bar-col.current .rain-bar {
+  background-color: var(--accent-color);
+}
+
+.rain-bar-hour {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.rain-bar-col.current .rain-bar-hour {
+  color: var(--accent-color);
+  font-weight: 800;
+}
 
 /* Demo Banner styling */
 .demo-banner {

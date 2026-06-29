@@ -81,10 +81,11 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   const coords = (typeof TOWNSHIP_COORDS !== 'undefined') ? TOWNSHIP_COORDS[`${county}_${township}`] : null;
 
   const url = `${CWA_API_BASE}/${datasetId}?Authorization=${apiKey}&locationName=${encodeURIComponent(township)}`;
-  const [res, rainAmount, realTimeObs] = await Promise.all([
+  const [res, rainAmount, realTimeObs, hourlyRain] = await Promise.all([
     fetch(url),
     fetchRainAmount(county, township, apiKey, coords),
-    fetchRealTimeObservation(county, township, apiKey, coords)
+    fetchRealTimeObservation(county, township, apiKey, coords),
+    coords ? fetchOpenMeteoHourlyRain(coords.lat, coords.lon) : Promise.resolve(null)
   ]);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
 
@@ -108,7 +109,7 @@ async function fetchAndCacheWeather(county, township, apiKey) {
   }
 
   await supplementMissingPoP(forecast, county, township, coords);
-  const data = { current, forecast };
+  const data = { current, forecast, hourlyRain };
   await setCacheEntry(`${county}_${township}`, data);
   return data;
 }
@@ -234,6 +235,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg.type === "FETCH_OPEN_METEO_POP") {
     fetchOpenMeteoPoP(msg.lat, msg.lon)
+      .then(data => sendResponse({ ok: true, data }))
+      .catch(err => sendResponse({ ok: false, error: err.message }));
+    return true;
+  }
+  if (msg.type === "FETCH_OPEN_METEO_HOURLY_RAIN") {
+    fetchOpenMeteoHourlyRain(msg.lat, msg.lon)
       .then(data => sendResponse({ ok: true, data }))
       .catch(err => sendResponse({ ok: false, error: err.message }));
     return true;

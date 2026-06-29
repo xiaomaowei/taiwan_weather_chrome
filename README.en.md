@@ -2,7 +2,7 @@
 
 English | [繁體中文](./README.md)
 
-> **Current Version**: v2.3.10
+> **Current Version**: v2.3.12
 
 This is a Chrome browser weather extension tailored for Taiwan. Featuring a **warm and cute hand-drawn illustration style**, it supports real-time weather and weekly forecasts detailed down to the **township/district level**, allowing you to check weather conditions all over Taiwan at any time while browsing the web!
 
@@ -18,9 +18,10 @@ This is a Chrome browser weather extension tailored for Taiwan. Featuring a **wa
 * 📍 **Fine-grained Location**: All 22 counties/cities and every township/district in Taiwan.
 * 🌦️ **Real-time Weather**: Temperature, apparent temperature, humidity, precipitation probability, wind speed/direction.
 * 🌧️ **Rainfall Alert**: Integrates CWA rain gauge API to display daily cumulative rainfall and hourly rainfall warnings (triggers a red breathing light alert when hourly rainfall ≥ 30 mm).
+* 📈 **12-Hour Rainfall Trend**: An hourly rainfall bar chart at the bottom of the popup, centered on "Now", showing the past 6 hours (actual observations) through the next 6 hours (forecast), with the period's cumulative total. Past and future hours are color-coded; data is sourced from Open-Meteo hourly precipitation.
 * 🔔 **Official Weather Alerts**: Fetches live official warnings (heavy rain, strong wind, typhoon, etc.) and displays a prominent warning banner.
 * 📊 **Intelligent Daily Summary**: Auto-generates a one-line summary based on current parameters and alerts, letting you grasp today's highlights at a glance.
-* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Matches the nearest monitoring station. Click to expand PM10, O₃, NO₂, CO, SO₂ details and personalized health advice.
+* 🌿 **Real-time Air Quality (AQI & PM2.5)**: Matches the nearest monitoring station, shown as an inline strip at the bottom of the weather card with AQI and PM2.5, a colored status badge, and the station name.
 * 📅 **Weekly Forecast**: 7-day forecast with highlighted tomorrow's card, color-coded precipitation probability, and clear data source badges.
 * 🎨 **Healing Hand-drawn Design**: Warm light and dark chalkboard themes with hand-drawn borders and micro-animations.
 * 🏷️ **Quick Area Switch**: Fuzzy search + one-click saving of frequently visited townships.
@@ -115,6 +116,16 @@ To display real-time AQI and PM2.5 data, it is recommended to configure your Min
 * **Hourly Rainfall Alert**: The `RainfallElement.Past1hr.Precipitation` field represents cumulative rainfall in the past 1 hour. If this value is **≥ 30 mm** (heavy rain threshold), the UI automatically switches to display "Hourly Rainfall" and flashes a red breathing alert indicator.
 * **Fault Tolerance**: If the rainfall API fails, the rainfall card will fallback to `-- mm` gracefully.
 * **Special Codes**: `T` (trace amount, too small to measure); `-98` (no rain for 6 consecutive hours, displayed as 0.0 mm); `-99` / `X` (sensor malfunction or missing data, displayed as 0.0 mm).
+
+</details>
+
+<details>
+<summary><b>📈 Click to expand: 12-Hour Rainfall Trend — Data & Logic</b></summary>
+
+* **Data source**: Hourly precipitation from the [Open-Meteo API](https://open-meteo.com/) (`hourly=precipitation`), requested with both `past_days=1` (actual past rainfall) and `forecast_days=2` (forecast rainfall) — no API key required.
+* **Display window**: Centered on the current time, it shows 13 hourly bars spanning "6 hours back → 6 hours ahead". Past (actual) and future (forecast) hours are color-coded, the "Now" column is marked, and the period's cumulative total is shown in the top-right.
+* **Update & caching**: The hourly array is fetched and cached together with the Settings page's "Update Frequency" (the background Service Worker fetches it on periodic refresh too), but the displayed window re-aligns to the current time each time the popup opens, so it never gets stuck on a stale timeline.
+* **Graceful degradation**: If the selected township has no coordinates or the Open-Meteo request fails, the trend strip simply hides itself without affecting the rest of the weather display.
 
 </details>
 

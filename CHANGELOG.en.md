@@ -4,6 +4,11 @@ All notable changes and updates to the "Taiwan Weather Chrome Extension" are doc
 
 ---
 
+## [v2.3.12] - 2026-06-29
+### Added
+- **New "12-Hour Rainfall" trend strip**: A rainfall trend bar was added at the very bottom of the popup, showing hourly rainfall centered on the current time — from 6 hours back (actual) to 6 hours ahead (forecast) — with the period's cumulative total shown as "💧 X.X mm" in the top-right. Data comes from Open-Meteo hourly precipitation (`hourly=precipitation` with `past_days=1` / `forecast_days=2`); past and future hours are color-coded and the "Now" column is marked. The hourly array is fetched and cached together with the Settings page's "Update Frequency", but the displayed window re-aligns to the current time every time the popup opens. The background script's (`background.js`) periodic refresh also fetches and caches this data.
+- **Trimmed the popup layout**: To fit the new rainfall strip on a single screen without a right-hand scrollbar, the "7-Day Forecast" and rainfall section titles were removed (the rainfall section now conveys its meaning through the top-right cumulative total), and card spacing/padding were tightened. The reclaimed vertical space is used to make the rainfall bars taller and clearer.
+
 ## [v2.3.11] - 2026-06-29
 ### Changed
 - **Weather detail now shows "Wind / Gust"**: The former "Wind Scale" field displayed the Beaufort scale number (e.g. "1"). It now shows the actual wind speed and peak gust from CWA's real-time observation station (e.g. "2.3 / 5.4 m/s"), which is more intuitive and precise. The gust value is read from the observation API (`O-A0003-001`) field `GustInfo.PeakGustSpeed`. The now-unused `windSpeedToBeaufort` conversion helper was removed. On upgrade, old-format caches (missing the wind speed fields) are automatically invalidated and refetched so the field doesn't show `--`.

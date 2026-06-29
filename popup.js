@@ -42,6 +42,7 @@ const I18N_STRINGS = {
     labelApparentTemp: "體感溫度", labelHumidity: "相對濕度",
     labelRainProb: "降雨機率", labelDailyRain: "今日累積", labelHourlyRain: "時雨量",
     labelWindScale: "風速/陣風", labelWindScaleUnit: "m/s", labelWindDir: "風向",
+    rainTrendTitle: "12 小時雨量", rainTrendNow: "現在", rainTrendUnit: "mm",
     forecastTitle: "一週天氣預報", forecastToday: "今天", forecastTomorrow: "明天",
     forecastSun: "週日", forecastMon: "週一", forecastTue: "週二",
     forecastWed: "週三", forecastThu: "週四", forecastFri: "週五", forecastSat: "週六",
@@ -100,6 +101,7 @@ const I18N_STRINGS = {
     labelApparentTemp: "Feels Like", labelHumidity: "Humidity",
     labelRainProb: "Rain Prob.", labelDailyRain: "Daily Total", labelHourlyRain: "Hourly Rain",
     labelWindScale: "Wind / Gust", labelWindScaleUnit: "m/s", labelWindDir: "Wind Direction",
+    rainTrendTitle: "12-Hour Rainfall", rainTrendNow: "Now", rainTrendUnit: "mm",
     forecastTitle: "7-Day Forecast", forecastToday: "Today", forecastTomorrow: "Tomorrow",
     forecastSun: "Sun", forecastMon: "Mon", forecastTue: "Tue",
     forecastWed: "Wed", forecastThu: "Thu", forecastFri: "Fri", forecastSat: "Sat",
@@ -233,6 +235,9 @@ const rainAmountEl       = document.getElementById("detail-rain-amount");
 const windScaleEl        = document.getElementById("detail-wind-scale");
 const windDirEl          = document.getElementById("detail-wind-dir");
 const forecastListEl     = document.getElementById("forecast-list");
+const rainTrendSection   = document.getElementById("rain-trend-section");
+const rainTrendTotalEl   = document.getElementById("rain-trend-total");
+const rainTrendChartEl   = document.getElementById("rain-trend-chart");
 const demoModeBanner     = document.getElementById("demo-mode-banner");
 
 // AQI DOM references
@@ -452,6 +457,107 @@ function renderTodaySummary(current, aqiVal, weatherAlerts) {
   if (summary.isAlert) {
     todaySummaryBar.classList.add('alert-mode');
   }
+}
+
+// ── 12-Hour Rain Trend (actual + forecast) ───────────────────────────────────
+// Slice the raw Open-Meteo hourly array down to a window centred on the current
+// hour: HOURS_BACK hours behind → HOURS_FWD hours ahead. Recomputed on every
+// render so the window always recentres on "now", even from a cached array.
+const RAIN_TREND_HOURS_BACK = 6;
+const RAIN_TREND_HOURS_FWD  = 6;
+
+function buildRainTrendWindow(hourlyRaw) {
+  if (!Array.isArray(hourlyRaw) || hourlyRaw.length === 0) return null;
+  const nowMs = Date.now();
+  // Open-Meteo times are Asia/Taipei local with no offset → anchor them to +08:00
+  // so the comparison is correct regardless of the user's own timezone.
+  const parsed = hourlyRaw
+    .map(h => ({ time: h.time, precip: h.precip, ms: new Date(`${h.time}:00+08:00`).getTime() }))
+    .filter(h => !isNaN(h.ms));
+  if (parsed.length === 0) return null;
+
+  // Current hour = last entry whose timestamp is at or before now.
+  let nowIdx = 0;
+  for (let i = 0; i < parsed.length; i++) {
+    if (parsed[i].ms <= nowMs) nowIdx = i; else break;
+  }
+
+  const start = Math.max(0, nowIdx - RAIN_TREND_HOURS_BACK);
+  const end   = Math.min(parsed.length, nowIdx + RAIN_TREND_HOURS_FWD + 1);
+  const hours = parsed.slice(start, end).map(h => {
+    const precip = (typeof h.precip === "number" && h.precip > 0) ? h.precip : 0;
+    return {
+      hour: parseInt(h.time.split("T")[1].slice(0, 2)),
+      precip,
+      isPast: h.ms < parsed[nowIdx].ms,
+      isCurrent: h.ms === parsed[nowIdx].ms
+    };
+  });
+  if (hours.length === 0) return null;
+
+  const total = hours.reduce((s, h) => s + h.precip, 0);
+  return { hours, total: Math.round(total * 10) / 10 };
+}
+
+// Demo-mode synthetic window (no network); seeded so it stays stable per hour.
+function getMockRainWindow(county, township, current) {
+  const baseNow = new Date();
+  const rand = getSeedRandom(`${county}${township}rain${baseNow.getHours()}`);
+  const rainy = /雨|雷/.test(current?.wx || "") ||
+                (current?.rainAmount && parseFloat(current.rainAmount.now) > 0);
+  const hours = [];
+  let total = 0;
+  for (let off = -RAIN_TREND_HOURS_BACK; off <= RAIN_TREND_HOURS_FWD; off++) {
+    const d = new Date(baseNow);
+    d.setHours(baseNow.getHours() + off, 0, 0, 0);
+    let precip = 0;
+    if (rainy) {
+      precip = Math.max(0, parseFloat((rand() * 4 - 1).toFixed(1)));
+    } else if (rand() < 0.2) {
+      precip = parseFloat((rand() * 0.6).toFixed(1));
+    }
+    total += precip;
+    hours.push({ hour: d.getHours(), precip, isPast: off < 0, isCurrent: off === 0 });
+  }
+  return { hours, total: Math.round(total * 10) / 10 };
+}
+
+function formatRainTrendVal(precip) {
+  if (precip <= 0) return "";
+  return precip >= 10 ? String(Math.round(precip)) : precip.toFixed(1);
+}
+
+function renderRainTrend(windowObj) {
+  if (!windowObj || !Array.isArray(windowObj.hours) || windowObj.hours.length === 0) {
+    rainTrendSection.classList.add("hidden");
+    return;
+  }
+  const { hours, total } = windowObj;
+  const maxP = Math.max(...hours.map(h => h.precip), 0);
+  const ref  = Math.max(maxP, 1);   // mm value mapped to a full-height bar
+  const MAX_BAR_H = 34;
+
+  // No section title anymore — the droplet prefix signals this is the rainfall total.
+  rainTrendTotalEl.textContent = `💧 ${total} ${t("rainTrendUnit")}`;
+  rainTrendChartEl.innerHTML = "";
+
+  hours.forEach(h => {
+    const col = document.createElement("div");
+    col.className = "rain-bar-col" +
+      (h.isPast ? " past" : " future") +
+      (h.isCurrent ? " current" : "");
+    const hasRain = h.precip > 0;
+    const barH = hasRain ? Math.max(4, Math.round((h.precip / ref) * MAX_BAR_H)) : 2;
+    const hourLabel = h.isCurrent ? t("rainTrendNow") : String(h.hour).padStart(2, "0");
+    col.innerHTML = `
+      <span class="rain-bar-val">${formatRainTrendVal(h.precip)}</span>
+      <span class="rain-bar-track"><span class="rain-bar" style="height:${barH}px"></span></span>
+      <span class="rain-bar-hour">${hourLabel}</span>
+    `;
+    rainTrendChartEl.appendChild(col);
+  });
+
+  rainTrendSection.classList.remove("hidden");
 }
 
 // ── Weather Alert Fetch (CWA W-C0033-001) ────────────────────────────────────
@@ -756,6 +862,14 @@ function renderWeather(weatherData, fromCache = false, cacheAge = "") {
 
   // Fetch air quality data alongside weather, then generate summary
   const loc = savedLocations[activeLocationIdx];
+
+  // 12-hour rain trend: recompute the window from the (cached) hourly array so it
+  // always recentres on the current time; demo mode uses a synthetic window.
+  if (currentSettings.demoMode) {
+    renderRainTrend(getMockRainWindow(loc.county, loc.township, current));
+  } else {
+    renderRainTrend(buildRainTrendWindow(weatherData.hourlyRain));
+  }
 
   // Demo mode: render mock AQI + summary inline
   if (currentSettings.demoMode) {
@@ -1070,6 +1184,28 @@ async function fetchOpenMeteoPoPViaBackground(lat, lon) {
   return fetchOpenMeteoPoP(lat, lon);
 }
 
+// Same background-first strategy for the hourly rain array (MV3 host-permission safety).
+async function fetchOpenMeteoHourlyRainViaBackground(lat, lon) {
+  if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+    try {
+      const response = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: "FETCH_OPEN_METEO_HOURLY_RAIN", lat, lon }, (res) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(res);
+          }
+        });
+      });
+      if (response && response.ok) return response.data;
+      console.warn("[Popup] Background fetchOpenMeteoHourlyRain returned error:", response?.error);
+    } catch (err) {
+      console.warn("[Popup] Background FETCH_OPEN_METEO_HOURLY_RAIN failed, falling back to local fetch:", err.message);
+    }
+  }
+  return fetchOpenMeteoHourlyRain(lat, lon);
+}
+
 async function supplementMissingPoPInPopup(forecast, county, township) {
   const coords = TOWNSHIP_COORDS[`${county}_${township}`];
   return supplementMissingPoP(forecast, county, township, coords, fetchOpenMeteoPoPViaBackground);
@@ -1130,10 +1266,11 @@ async function fetchWeather(force = false) {
 
     const parsedData = parseCWAWeatherData(json, loc.township);
     const coords = TOWNSHIP_COORDS[`${loc.county}_${loc.township}`];
-    const [_, rainAmount, realTimeObs] = await Promise.all([
+    const [_, rainAmount, realTimeObs, hourlyRain] = await Promise.all([
       supplementMissingPoPInPopup(parsedData.forecast, loc.county, loc.township),
       fetchRainAmount(loc.county, loc.township, currentSettings.apiKey, coords),
-      fetchRealTimeObservation(loc.county, loc.township, currentSettings.apiKey, coords)
+      fetchRealTimeObservation(loc.county, loc.township, currentSettings.apiKey, coords),
+      coords ? fetchOpenMeteoHourlyRainViaBackground(coords.lat, coords.lon) : Promise.resolve(null)
     ]);
     if (realTimeObs) {
       if (realTimeObs.temp !== null) parsedData.current.temp = realTimeObs.temp;
@@ -1148,6 +1285,7 @@ async function fetchWeather(force = false) {
       }
     }
     parsedData.current.rainAmount = rainAmount;
+    parsedData.hourlyRain = hourlyRain;
     await writeToCache(loc.county, loc.township, parsedData);
     renderWeather(parsedData, false, t("cacheJustUpdated"));
   } catch (err) {

@@ -174,6 +174,26 @@ async function fetchOpenMeteoPoP(lat, lon) {
   }
 }
 
+// ── Open-Meteo hourly precipitation (past + forecast) for the rain-trend strip ─
+// Returns an array of { time: "YYYY-MM-DDTHH:00" (Asia/Taipei), precip: mm } or null.
+// past_days=1 gives the actual (reanalysis) hours behind us; forecast_days=2 the ahead ones.
+async function fetchOpenMeteoHourlyRain(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+                `&hourly=precipitation&timezone=Asia%2FTaipei&past_days=1&forecast_days=2`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Open-Meteo hourly error: ${res.status}`);
+    const json = await res.json();
+    const times = json?.hourly?.time;
+    const precs = json?.hourly?.precipitation;
+    if (!Array.isArray(times) || !Array.isArray(precs) || times.length !== precs.length) return null;
+    return times.map((time, i) => ({ time, precip: precs[i] }));
+  } catch (err) {
+    console.warn("[weather_utils] fetchOpenMeteoHourlyRain failed:", err.message);
+    return null;
+  }
+}
+
 // ── Fill in days with missing PoP using Open-Meteo, given a fetcher fn ─────────
 // fetchPoPFn lets callers swap in a message-passing wrapper (e.g. popup → background)
 // while still sharing the rest of this logic; defaults to the direct fetch above.
