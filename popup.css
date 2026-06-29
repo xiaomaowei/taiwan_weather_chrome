@@ -763,7 +763,7 @@ body {
 .rain-trend-total {
   font-size: 12px;
   font-weight: 800;
-  color: var(--accent-blue);
+  color: var(--text-color);
   white-space: nowrap;
   line-height: 1.2;
 }
