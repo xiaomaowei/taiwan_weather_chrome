@@ -6,7 +6,8 @@ English | [繁體中文](./README.md)
 
 This is a Chrome browser weather extension tailored for Taiwan. Featuring a **warm and cute hand-drawn illustration style**, it supports real-time weather and weekly forecasts detailed down to the **township/district level**, allowing you to check weather conditions all over Taiwan at any time while browsing the web!
 
-<img width="360" height="564" alt="image" src="https://github.com/user-attachments/assets/91a9f7ee-e058-44eb-b1db-efeada91fa76" />
+<img width="360" height="600" alt="image" src="https://github.com/user-attachments/assets/cacfaa40-ab0f-4390-abfa-ee116a55c765" />
+
 
 
 ---
